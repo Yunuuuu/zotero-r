@@ -4,7 +4,7 @@
 \alias{zotero_autho}
 \title{Zotero API Key Management and OAuth Authorization}
 \usage{
-zotero_autho(api_key = NULL, oauth_userid = NULL)
+zotero_autho(api_key = NULL, oauth_userid = NULL, reauth = FALSE)
 }
 \arguments{
 \item{api_key}{Optional API key. If provided, the function will set the API
@@ -14,6 +14,15 @@ key in the memory and return without performing OAuth authorization.}
 specific to the user. If provided, the function will search for a cached
 token associated with this user ID. If not provided, the function will use
 the last used token key file or the most recently available cached token.}
+
+\item{reauth}{Logical. If \code{TRUE}, forces reauthorization even if a cached
+token exists. Defaults to \code{FALSE}. If set to \code{TRUE}, the function will
+always initiate the OAuth flow regardless of existing cached tokens.}
+}
+\value{
+The function invisibly returns \code{NULL} after either setting the API
+key or completing the OAuth authorization process and caching the OAuth
+token for future use.
 }
 \description{
 This function manages API key handling and OAuth authorization for the Zotero

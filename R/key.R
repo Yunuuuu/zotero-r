@@ -12,6 +12,15 @@ zotero_key <- function() the$key_cache
 #' specific to the user. If provided, the function will search for a cached
 #' token associated with this user ID. If not provided, the function will use
 #' the last used token key file or the most recently available cached token.
+#'
+#' @param reauth Logical. If `TRUE`, forces reauthorization even if a cached
+#'   token exists. Defaults to `FALSE`. If set to `TRUE`, the function will
+#'   always initiate the OAuth flow regardless of existing cached tokens.
+#'
+#' @return The function invisibly returns `NULL` after either setting the API
+#'   key or completing the OAuth authorization process and caching the OAuth
+#'   token for future use.
+#'
 #' @export
 zotero_autho <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
     if (!is.null(api_key)) {
@@ -59,6 +68,16 @@ zotero_autho <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
     return(invisible(NULL))
 }
 
+#' Revoke Zotero OAuth Authorization
+#'
+#' This function revokes the OAuth authorization for a given user. It removes
+#' the cached OAuth token and deletes any associated token files.
+#'
+#' @param oauth_userid Optional user ID. If provided, the function will attempt
+#'   to find the cached OAuth token for this user. If not provided, the function
+#'   will attempt to use the current global OAuth key.
+#'
+#' @export
 zotero_revoke <- function(oauth_userid = NULL) {
     if (is.null(oauth_userid)) {
         key <- zotero_key()
@@ -101,6 +120,7 @@ zotero_revoke <- function(oauth_userid = NULL) {
             ))
         }
     }
+    return(invisible(NULL))
 }
 
 #' @importFrom rlang hash
@@ -119,7 +139,7 @@ zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
         assert_string(oauth_userid, call = call)
         path <- oauth_token_path(oauth_userid)
         if (!file.exists(path)) {
-            cli::cli_abort("No cached OAuth file found for user ID {.field {oauth_userid}}.")
+            cli::cli_abort("No cached OAuth file found for userID: {.field {oauth_userid}}.")
         }
     }
     if (is.null(path)) {
@@ -146,8 +166,10 @@ zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
                     oauth_userids <- oauth_userids[-seq_len(missing)]
                     if (length(oauth_userids)) {
                         saveRDS(oauth_userids, oauth_userids_file)
-                    } else {
-                        unlink(oauth_userids_file, force = TRUE)
+                    } else if (unlink(oauth_userids_file, force = TRUE)) {
+                        cli::cli_warn(
+                            "cannot remove file {.path {oauth_userids_file}}"
+                        )
                     }
                 }
             } else {
