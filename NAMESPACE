@@ -2,6 +2,9 @@
 
 S3method(print,zotero_api_key)
 S3method(print,zotero_oauth_key)
+S3method(zotero_autho_key,"NULL")
+S3method(zotero_autho_key,zotero_api_key)
+S3method(zotero_autho_key,zotero_oauth_key)
 export(zotero_autho)
 importFrom(rlang,abort)
 importFrom(rlang,caller_arg)

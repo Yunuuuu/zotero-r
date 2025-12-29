@@ -1,118 +1,162 @@
-zotero_key <- function(api_key = NULL) {
-    if (!is.null(api_key)) {
-        return(zotero_api_key(api_key))
-    }
-    the$key_cache
-}
+zotero_key <- function() the$key_cache
 
 #' Zotero API Key Management and OAuth Authorization
 #'
 #' This function manages API key handling and OAuth authorization for the Zotero
-#' API. It supports:
-#'  - Caching OAuth tokens for future use.
-#'  - Retrieving existing tokens from cached files.
-#'  - Performing new OAuth authorization flows.
+#' API.
 #'
 #' @param api_key Optional API key. If provided, the function will set the API
 #' key in the memory and return without performing OAuth authorization.
-#' @param oauth_strategy A character string specifying how to access the OAuth
-#' token and whether to cache it:
-#'  - `"read"`: Only read from the cached OAuth token file. Will error if the
-#'    cached file does not exist.
-#'  - `"auth"`: Perform OAuth authorization without caching the token.
-#'  - `"save"`: Perform OAuth authorization and cache the token locally for
-#'    future use.
-#'
-#' If `oauth_strategy` is `NULL` (the default), the function will attempt to:
-#'  - First attempt to read from a cached OAuth token if available.
-#'  - If the cached token is not found, it will attempt to perform OAuth
-#'    authorization.
 #'
 #' @param oauth_userid Optional user ID. Used to retrieve a cached OAuth token
 #' specific to the user. If provided, the function will search for a cached
 #' token associated with this user ID. If not provided, the function will use
 #' the last used token key file or the most recently available cached token.
-#' @importFrom rlang hash
 #' @export
-zotero_autho <- function(api_key = NULL, oauth_strategy = NULL,
-                         oauth_userid = NULL) {
+zotero_autho <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
     if (!is.null(api_key)) {
         assert_string(api_key)
         the$key_cache <- zotero_api_key(api_key)
         return(invisible(NULL))
     }
-    if (!interactive()) {
-        cli::cli_abort(c(
-            "OAuth authorization requires an interactive session.",
-            i = "Provide an {.arg api_key} to skip OAuth."
-        ))
-    }
-    if (is.null(oauth_strategy)) {
-        strategy <- NULL
+    assert_bool(reauth)
+    if (reauth || is.null(path <- zotero_oauth_path(oauth_userid))) {
+        if (!interactive()) {
+            cli::cli_abort(c(
+                "OAuth authorization requires an interactive session.",
+                i = "Provide an {.arg api_key} to skip OAuth."
+            ))
+        }
+        the$key_cache <- zotero_oauth_key()
     } else {
-        strategy <- rlang::arg_match0(oauth_strategy, c("read", "auth", "save"))
+        the$key_cache <- httr2::secret_read_rds(
+            path,
+            I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
+        )
     }
-    cached <- cache_dir()
+
+    # cache the OAuth token for future use
+    httr2::secret_write_rds(
+        the$key_cache, oauth_token_path(the$key_cache["userID"]),
+        I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
+    )
+    cli::cli_inform(c(
+        "v" = sprintf(
+            "OAuth authorization for userID: {.field %s}",
+            the$key_cache["userID"]
+        )
+    ))
+
+    # Save the user ID of the OAuth key for future reference
+    oauth_userids_file <- oauth_userids_path()
+    if (file.exists(oauth_userids_file)) {
+        oauth_userids <- readRDS(oauth_userids_file)
+    } else {
+        oauth_userids <- NULL
+    }
+    oauth_userids <- unique(c(the$key_cache["userID"], oauth_userids))
+    saveRDS(oauth_userids, oauth_userids_file)
+    return(invisible(NULL))
+}
+
+zotero_revoke <- function(oauth_userid = NULL) {
+    if (is.null(oauth_userid)) {
+        key <- zotero_key()
+    }
+    if (is.null(key) && !is.null(path <- zotero_oauth_path(oauth_userid))) {
+        key <- httr2::secret_read_rds(
+            path,
+            I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
+        )
+    }
+    if (!is.null(key)) {
+        req <- httr2::req_url_path_append(
+            api_req(), "keys", key["oauth_token_secret"]
+        )
+        req <- httr2::req_method(req, "DELETE")
+        resp <- httr2::req_perform(zotero_autho_key(key, req))
+        if (!httr2::resp_is_error(resp)) {
+            oauth_userids_file <- oauth_userids_path()
+            if (file.exists(oauth_userids_file)) {
+                oauth_userids <- readRDS(oauth_userids_file)
+                oauth_userids <- setdiff(oauth_userids, key["userID"])
+                if (length(oauth_userids)) {
+                    saveRDS(oauth_userids, oauth_userids_file)
+                } else if (unlink(oauth_userids_file, force = TRUE)) {
+                    cli::cli_warn(
+                        "cannot remove file {.path {oauth_userids_file}}"
+                    )
+                }
+            }
+            oauth_token_file <- oauth_token_path(key["userID"])
+            if (file.exists(oauth_token_file) &&
+                unlink(oauth_token_file, force = TRUE)) {
+                cli::cli_warn("cannot remove file {.path {oauth_token_file}}")
+            }
+            cli::cli_inform(c(
+                "v" = sprintf(
+                    "Revoked OAuth authorization for userID: {.field %s}",
+                    key["userID"]
+                )
+            ))
+        }
+    }
+}
+
+#' @importFrom rlang hash
+oauth_token_path <- function(userid) {
+    file.path(cache_dir(), paste0(hash(userid), "-token.rds"), fsep = "/")
+}
+
+oauth_userids_path <- function() {
+    file.path(cache_dir(), "oauth-userids.rds", fsep = "/")
+}
+
+zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
     if (is.null(oauth_userid)) {
         path <- NULL
     } else {
-        assert_string(oauth_userid)
-        path <- file.path(cached, paste0(hash(oauth_userid), "-token.rds"))
+        assert_string(oauth_userid, call = call)
+        path <- oauth_token_path(oauth_userid)
         if (!file.exists(path)) {
             cli::cli_abort("No cached OAuth file found for user ID {.field {oauth_userid}}.")
         }
     }
-    key <- NULL
-    if (is.null(strategy) || identical(strategy, "read")) {
-        if (is.null(path)) {
-            token_files <- dir(
-                cached,
-                recursive = TRUE,
-                full.names = TRUE,
-                pattern = "-token\\.rds$"
-            )
-            if (length(token_files)) {
-                userid_file <- file.path(cached, "last-oauth-userid.rds")
-                if (file.exists(userid_file)) {
-                    oauth_userid <- readRDS(userid_file)
-                    path <- file.path(cached, paste0(
-                        hash(oauth_userid), "-token.rds"
-                    ))
-                } else {
-                    ordering <- order(
-                        file.mtime(token_files),
-                        decreasing = TRUE
-                    )
-                    path <- token_files[ordering[1L]]
+    if (is.null(path)) {
+        token_files <- dir(
+            cache_dir(),
+            recursive = TRUE,
+            full.names = TRUE,
+            pattern = "-token\\.rds$"
+        )
+        if (length(token_files)) {
+            oauth_userids_file <- oauth_userids_path()
+            if (file.exists(oauth_userids_file)) {
+                oauth_userids <- unique(readRDS(oauth_userids_file))
+                missing <- 0L
+                for (userid in oauth_userids) {
+                    path0 <- oauth_token_path(userid)
+                    if (file.exists(path0)) {
+                        path <- path0
+                        break
+                    }
+                    missing <- missing + 1L
                 }
+                if (missing > 0L) {
+                    oauth_userids <- oauth_userids[-seq_len(missing)]
+                    if (length(oauth_userids)) {
+                        saveRDS(oauth_userids, oauth_userids_file)
+                    } else {
+                        unlink(oauth_userids_file, force = TRUE)
+                    }
+                }
+            } else {
+                ordering <- order(file.mtime(token_files), decreasing = TRUE)
+                path <- token_files[ordering[1L]]
             }
         }
-        if (!is.null(path)) {
-            key <- httr2::secret_read_rds(
-                path,
-                httr2_fun("unobfuscate")(.secret$obfuscate_key())
-            )
-            # Save the user ID of the OAuth key for future reference
-            saveRDS(key["userID"], file.path(cached, "last-oauth-userid.rds"))
-        } else if (identical(strategy, "read")) {
-            cli::cli_abort(c(
-                "No cached OAuth file found.",
-                i = "Try not setting {.code oauth_key = 'read'}."
-            ))
-        }
     }
-    if (is.null(key)) key <- zotero_oauth_key()
-    the$key_cache <- key
-
-    # If the strategy is "save", cache the OAuth token for future use
-    if (identical(strategy, "save")) {
-        httr2::secret_write_rds(key, file.path(cached, paste0(
-            hash(key["userID"]), "-token.rds"
-        )), httr2_fun("unobfuscate")(.secret$obfuscate_key()))
-        # Save the user ID of the OAuth key for future reference
-        saveRDS(key["userID"], file.path(cached, "last-oauth-userid.rds"))
-    }
-    return(invisible(NULL))
+    path
 }
 
 zotero_api_key <- function(api_key) {
