@@ -7,7 +7,7 @@
 zotero_req_key(key = NULL)
 }
 \arguments{
-\item{key}{otero API Key for the request. By default, the function will
+\item{key}{Zotero API Key for the request. By default, the function will
 attempt to use the \link[=zotero_key]{global API key}.}
 }
 \description{

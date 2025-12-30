@@ -24,7 +24,7 @@ zotero_request <- function(..., query = NULL) {
 #' This function retrieves the user ID and privileges associated with a given
 #' Zotero API key.
 #'
-#' @param key otero API Key for the request. By default, the function will
+#' @param key Zotero API Key for the request. By default, the function will
 #'   attempt to use the [global API key][zotero_key()].
 #' @export
 zotero_req_key <- function(key = NULL) {
