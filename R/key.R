@@ -97,8 +97,11 @@ zotero_revoke <- function(oauth_userid = NULL) {
     if (!is.null(key)) {
         req <- zotero_request("keys", key["oauth_token_secret"])
         req <- httr2::req_method(req, "DELETE")
+        req <- httr2::req_error(req, is_error = function(resp) FALSE)
         resp <- zotero_perform(req, key = key)
-        if (!httr2::resp_is_error(resp)) {
+        status <- httr2::resp_status(resp) 
+        # 403 Forbidden which means the key is already revoked
+        if (!httr2::resp_is_error(resp) || status == 403L) {
             oauth_userids_file <- oauth_userids_path()
             if (file.exists(oauth_userids_file)) {
                 oauth_userids <- readRDS(oauth_userids_file)
