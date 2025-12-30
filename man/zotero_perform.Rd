@@ -19,7 +19,7 @@ zotero_perform(req, ..., key = NULL)
 }}
 
 \item{key}{Optional authenticated key for the request, if required. By
-default, the function will attempt to use the \link[=zotero_key]{global key}.}
+default, the function will attempt to use the \link[=zotero_key]{global API key}.}
 }
 \value{
 The response from the Zotero API.

@@ -19,6 +19,34 @@ zotero_request <- function(..., query = NULL) {
     req
 }
 
+#' Zotero API Key Privileges and User Information
+#'
+#' This function retrieves the user ID and privileges associated with a given
+#' Zotero API key.
+#'
+#' @param key otero API Key for the request. By default, the function will
+#'   attempt to use the [global API key][zotero_key()].
+#' @export
+zotero_req_key <- function(key = NULL) {
+    key <- as_key(key)
+    # Tricks to do work in S3 generic
+    zotero_req_key <- function(key) UseMethod("zotero_req_key")
+    zotero_req_key(key)
+}
+
+#' @export
+zotero_req_key.NULL <- function(key) {
+    cli::cli_abort("{.arg key} must be provided")
+}
+
+#' @export
+zotero_req_key.zotero_api_key <- function(key) zotero_request("keys", key)
+
+#' @export
+zotero_req_key.zotero_oauth_key <- function(key) {
+    zotero_request("keys", key$oauth_token_secret)
+}
+
 #' Perform the Zotero API Request
 #'
 #' This function executes a Zotero API request created by `zotero_request`. It
@@ -34,7 +62,8 @@ zotero_request <- function(..., query = NULL) {
 #'  - When `req` is a list of requests, these arguments are passed to
 #'    [`httr2::req_perform_parallel()`].
 #' @param key Optional authenticated key for the request, if required. By
-#'   default, the function will attempt to use the [global key][zotero_key()].
+#'   default, the function will attempt to use the [global API
+#'   key][zotero_key()].
 #'
 #' @return The response from the Zotero API.
 #' @export

@@ -229,7 +229,7 @@ zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
 as_key <- function(key) UseMethod("as_key")
 
 #' @export
-as_key.NULL <- function(key) zotero_key()
+as_key.NULL <- function(key) zotero_key_get()
 
 #' @export
 as_key.zotero_api_key <- function(key) key
@@ -239,7 +239,9 @@ as_key.zotero_oauth_key <- function(key) key
 
 #' @export
 as_key.character <- function(key) {
-    assert_string(key, allow_empty = FALSE)
+    if (length(key) != 1L || key == "") {
+        cli::cli_abort("{.arg key} must be a single string")
+    }
     zotero_api_key(key)
 }
 
