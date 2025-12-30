@@ -271,7 +271,7 @@ zotero_oauth_key <- function() {
 
 #' @export
 print.zotero_oauth_key <- function(x, ...) {
-    cat("<zotero_oauth_key> for <userID: ", x["userID"], ">", "\n",
+    cat("<zotero_oauth_key> for <userID: ", x$userID, ">", "\n",
         append = TRUE, sep = ""
     )
     invisible(x)
