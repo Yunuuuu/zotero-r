@@ -129,7 +129,10 @@ zotero_revoke <- function(oauth_userid = NULL) {
 
 #' @importFrom rlang hash
 oauth_token_path <- function(userid) {
-    file.path(cache_dir(), paste0(hash(userid), "-token.rds"), fsep = "/")
+    file.path(cache_dir(),
+        paste0(hash(as.vector(userid)), "-token.rds"),
+        fsep = "/"
+    )
 }
 
 oauth_userids_path <- function() {
@@ -182,7 +185,7 @@ zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
             }
         }
     }
-    path
+    if (is.null(path)) browser() else path
 }
 
 as_key <- function(key) UseMethod("as_key")
