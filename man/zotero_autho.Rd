@@ -7,8 +7,8 @@
 zotero_autho(api_key = NULL, oauth_userid = NULL, reauth = FALSE)
 }
 \arguments{
-\item{api_key}{Optional API key. If provided, the function will set the API
-key in the memory and return without performing OAuth authorization.}
+\item{api_key}{A single string of API key. If provided, the function will set
+the API key in the memory and return without performing OAuth authorization.}
 
 \item{oauth_userid}{Optional user ID. Used to retrieve a cached OAuth token
 specific to the user. If provided, the function will search for a cached

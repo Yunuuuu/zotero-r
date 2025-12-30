@@ -1,3 +1,9 @@
+#' Retrieve the global Zotero API Key
+#'
+#' This function returns the currently cached Zotero API key from the internal
+#' cache. The key is used for authenticated requests to the Zotero API.
+#'
+#' @export
 zotero_key <- function() the$key_cache
 
 #' Zotero API Key Management and OAuth Authorization
@@ -5,8 +11,8 @@ zotero_key <- function() the$key_cache
 #' This function manages API key handling and OAuth authorization for the Zotero
 #' API.
 #'
-#' @param api_key Optional API key. If provided, the function will set the API
-#' key in the memory and return without performing OAuth authorization.
+#' @param api_key A single string of API key. If provided, the function will set
+#' the API key in the memory and return without performing OAuth authorization.
 #'
 #' @param oauth_userid Optional user ID. Used to retrieve a cached OAuth token
 #' specific to the user. If provided, the function will search for a cached
@@ -24,7 +30,7 @@ zotero_key <- function() the$key_cache
 #' @export
 zotero_autho <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
     if (!is.null(api_key)) {
-        assert_string(api_key)
+        assert_string(api_key, allow_empty = FALSE)
         the$key_cache <- zotero_api_key(api_key)
         return(invisible(NULL))
     }
@@ -89,11 +95,9 @@ zotero_revoke <- function(oauth_userid = NULL) {
         )
     }
     if (!is.null(key)) {
-        req <- httr2::req_url_path_append(
-            api_req(), "keys", key["oauth_token_secret"]
-        )
+        req <- zotero_request("keys", key["oauth_token_secret"])
         req <- httr2::req_method(req, "DELETE")
-        resp <- httr2::req_perform(zotero_autho_key(key, req))
+        resp <- zotero_perform(req, key = key)
         if (!httr2::resp_is_error(resp)) {
             oauth_userids_file <- oauth_userids_path()
             if (file.exists(oauth_userids_file)) {
@@ -179,6 +183,23 @@ zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
         }
     }
     path
+}
+
+as_key <- function(key) UseMethod("as_key")
+
+#' @export
+as_key.NULL <- function(key) zotero_key()
+
+#' @export
+as_key.zotero_api_key <- function(key) key
+
+#' @export
+as_key.zotero_oauth_key <- function(key) key
+
+#' @export
+as_key.character <- function(key) {
+    assert_string(key, allow_empty = FALSE)
+    zotero_api_key(key)
 }
 
 zotero_api_key <- function(api_key) {
