@@ -94,7 +94,7 @@ zotero_auth <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
 #' @param oauth_userid Optional user ID. If provided, the function will attempt
 #'   to find the cached OAuth token for this user. If not provided, the function
 #'   will attempt to use the current global OAuth key. For your user ID, visit
-#'   <https://www.zotero.org/settings/security#applications>.
+#'   <https://www.zotero.org/settings/keys>.
 #'
 #' @export
 zotero_revoke <- function(oauth_userid = NULL) {

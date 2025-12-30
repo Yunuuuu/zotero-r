@@ -10,7 +10,7 @@ zotero_revoke(oauth_userid = NULL)
 \item{oauth_userid}{Optional user ID. If provided, the function will attempt
 to find the cached OAuth token for this user. If not provided, the function
 will attempt to use the current global OAuth key. For your user ID, visit
-\url{https://www.zotero.org/settings/security#applications}.}
+\url{https://www.zotero.org/settings/keys}.}
 }
 \description{
 This function revokes the OAuth authorization for a given user. It also
