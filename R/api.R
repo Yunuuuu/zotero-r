@@ -67,6 +67,6 @@ zotero_header_key.zotero_api_key <- function(key, req) {
 #' @export
 zotero_header_key.zotero_oauth_key <- function(key, req) {
     httr2::req_headers(req,
-        Authorization = sprintf("Bearer %s", key["oauth_token_secret"])
+        Authorization = sprintf("Bearer %s", key$oauth_token_secret)
     )
 }

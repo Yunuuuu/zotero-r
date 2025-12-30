@@ -1,37 +1,49 @@
 #' Retrieve the global Zotero API Key
 #'
-#' This function returns the currently cached Zotero API key from the internal
-#' cache. The key is used for authenticated requests to the Zotero API.
+#' This function returns the global Zotero API key, which is set by
+#' [`zotero_auth()`].  The key is used for authenticated requests to the Zotero
+#' API.
 #'
 #' @export
-zotero_key <- function() the$key_cache
+zotero_key <- function() zotero_key_get()
+
+zotero_key_get <- function() the$key_cache
+zotero_key_set <- function(value) the$key_cache <- value
 
 #' Zotero API Key Management and OAuth Authorization
 #'
-#' This function manages API key handling and OAuth authorization for the Zotero
-#' API.
+#' This function handles both API key management and OAuth authorization for the
+#' Zotero API. Users can either provide a private API key directly or
+#' authenticate using OAuth. While both methods involve API keys, the private
+#' key is typically referred to as the "private API key", while the OAuth
+#' credential is referred to as the "OAuth token" within the package.
 #'
-#' @param api_key A single string of API key. If provided, the function will set
-#' the API key in the memory and return without performing OAuth authorization.
+#' @param api_key A string representing the private API key. If provided, the
+#'   function will store the API key in memory and return without performing
+#'   OAuth authorization. Visit
+#'   <https://www.zotero.org/settings/security#applications> to create a private
+#'   API key.
 #'
-#' @param oauth_userid Optional user ID. Used to retrieve a cached OAuth token
-#' specific to the user. If provided, the function will search for a cached
-#' token associated with this user ID. If not provided, the function will use
-#' the last used token key file or the most recently available cached token.
+#' @param oauth_userid Optional user ID. Only used when `api_key` is `NULL`. If
+#'   provided, the function will attempt to retrieve a cached OAuth token
+#'   associated with this user ID. If not provided, the function will attempt to
+#'   use the most recent cached token or the last used token file. For your user
+#'   ID, visit <https://www.zotero.org/settings/security#applications>.
 #'
-#' @param reauth Logical. If `TRUE`, forces reauthorization even if a cached
-#'   token exists. Defaults to `FALSE`. If set to `TRUE`, the function will
-#'   always initiate the OAuth flow regardless of existing cached tokens.
+#' @param reauth Logical. Only used when `api_key` is `NULL`. If `TRUE`, forces
+#'   reauthorization even if a cached token is available. Defaults to `FALSE`.
+#'   If set to `TRUE`, the function will always initiate the OAuth flow,
+#'   ignoring any existing cached tokens.
 #'
 #' @return The function invisibly returns `NULL` after either setting the API
-#'   key or completing the OAuth authorization process and caching the OAuth
-#'   token for future use.
+#'   key or completing the OAuth authorization process. If OAuth is used, the
+#'   OAuth token will be cached for future use.
 #'
 #' @export
-zotero_autho <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
+zotero_auth <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
     if (!is.null(api_key)) {
         assert_string(api_key, allow_empty = FALSE)
-        the$key_cache <- zotero_api_key(api_key)
+        zotero_key_set(zotero_api_key(api_key))
         return(invisible(NULL))
     }
     assert_bool(reauth)
@@ -42,23 +54,23 @@ zotero_autho <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
                 i = "Provide an {.arg api_key} to skip OAuth."
             ))
         }
-        the$key_cache <- zotero_oauth_key()
+        zotero_key_set(zotero_oauth_key())
     } else {
-        the$key_cache <- httr2::secret_read_rds(
+        zotero_key_set(httr2::secret_read_rds(
             path,
             I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
-        )
+        ))
     }
 
     # cache the OAuth token for future use
     httr2::secret_write_rds(
-        the$key_cache, oauth_token_path(the$key_cache["userID"]),
+        zotero_key_get(), oauth_token_path(zotero_key_get()$userID),
         I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
     )
     cli::cli_inform(c(
         "v" = sprintf(
             "OAuth authorization for userID: {.field %s}",
-            the$key_cache["userID"]
+            zotero_key_get()$userID
         )
     ))
 
@@ -69,25 +81,24 @@ zotero_autho <- function(api_key = NULL, oauth_userid = NULL, reauth = FALSE) {
     } else {
         oauth_userids <- NULL
     }
-    oauth_userids <- unique(c(the$key_cache["userID"], oauth_userids))
+    oauth_userids <- unique(c(zotero_key_get()$userID, oauth_userids))
     saveRDS(oauth_userids, oauth_userids_file)
     return(invisible(NULL))
 }
 
 #' Revoke Zotero OAuth Authorization
 #'
-#' This function revokes the OAuth authorization for a given user. It removes
-#' the cached OAuth token and deletes any associated token files.
+#' This function revokes the OAuth authorization for a given user. It also
+#' removes the cached OAuth token and deletes any associated token files.
 #'
 #' @param oauth_userid Optional user ID. If provided, the function will attempt
 #'   to find the cached OAuth token for this user. If not provided, the function
-#'   will attempt to use the current global OAuth key.
+#'   will attempt to use the current global OAuth key. For your user ID, visit
+#'   <https://www.zotero.org/settings/security#applications>.
 #'
 #' @export
 zotero_revoke <- function(oauth_userid = NULL) {
-    if (is.null(oauth_userid)) {
-        key <- zotero_key()
-    }
+    if (is.null(oauth_userid)) key <- zotero_key_get()
     if (is.null(key) && !is.null(path <- zotero_oauth_path(oauth_userid))) {
         key <- httr2::secret_read_rds(
             path,
@@ -95,46 +106,64 @@ zotero_revoke <- function(oauth_userid = NULL) {
         )
     }
     if (!is.null(key)) {
-        req <- zotero_request("keys", key["oauth_token_secret"])
+        req <- zotero_request("keys", key$oauth_token_secret)
         req <- httr2::req_method(req, "DELETE")
         req <- httr2::req_error(req, is_error = function(resp) FALSE)
         resp <- zotero_perform(req, key = key)
-        status <- httr2::resp_status(resp) 
-        # 403 Forbidden which means the key is already revoked
+        status <- httr2::resp_status(resp)
+        # Authentication errors (e.g., invalid API key or insufficient
+        # privileges) will return a 403 Forbidden
         if (!httr2::resp_is_error(resp) || status == 403L) {
-            oauth_userids_file <- oauth_userids_path()
-            if (file.exists(oauth_userids_file)) {
-                oauth_userids <- readRDS(oauth_userids_file)
-                oauth_userids <- setdiff(oauth_userids, key["userID"])
-                if (length(oauth_userids)) {
-                    saveRDS(oauth_userids, oauth_userids_file)
-                } else if (unlink(oauth_userids_file, force = TRUE)) {
-                    cli::cli_warn(
-                        "cannot remove file {.path {oauth_userids_file}}"
-                    )
-                }
-            }
-            oauth_token_file <- oauth_token_path(key["userID"])
+            # reset the global API key
+            if (is.null(oauth_userid)) zotero_key_set(NULL)
+
+            # remove the token file
+            oauth_token_file <- oauth_token_path(key$userID)
             if (file.exists(oauth_token_file) &&
                 unlink(oauth_token_file, force = TRUE)) {
                 cli::cli_warn("cannot remove file {.path {oauth_token_file}}")
             }
+
+            # remove the userid
+            oauth_userids_file <- oauth_userids_path()
+            if (file.exists(oauth_userids_file)) {
+                oauth_userids <- readRDS(oauth_userids_file)
+                oauth_userids <- setdiff(oauth_userids, key$userID)
+                if (length(oauth_userids)) {
+                    saveRDS(oauth_userids, oauth_userids_file)
+                } else if (unlink(oauth_userids_file, force = TRUE)) {
+                    cli::cli_warn(sprintf(
+                        "Unable to remove file {.path %s}",
+                        oauth_userids_file
+                    ))
+                }
+            }
             cli::cli_inform(c(
                 "v" = sprintf(
                     "Revoked OAuth authorization for userID: {.field %s}",
-                    key["userID"]
+                    key$userID
                 )
             ))
+        } else {
+            cli::cli_abort(c(
+                sprintf("Failed to revoke OAuth authorization for userID: {.field %s}. ", key$userID),
+                i = sprintf("HTTP Status: %s", status)
+            ))
         }
+    } else {
+        cli::cli_inform("No OAuth key found to revoke.")
     }
     return(invisible(NULL))
 }
 
-#' @importFrom rlang hash
 oauth_token_path <- function(userid) {
-    file.path(cache_dir(),
-        paste0(hash(as.vector(userid)), "-token.rds"),
-        fsep = "/"
+    file.path(cache_dir(), paste0(userid, "-token.rds"), fsep = "/")
+}
+
+oauth_token_files <- function() {
+    dir(cache_dir(),
+        recursive = TRUE, full.names = TRUE,
+        pattern = "-token\\.rds$"
     )
 }
 
@@ -146,21 +175,19 @@ zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
     if (is.null(oauth_userid)) {
         path <- NULL
     } else {
-        assert_string(oauth_userid, call = call)
+        assert_string(oauth_userid, allow_empty = FALSE, call = call)
         path <- oauth_token_path(oauth_userid)
         if (!file.exists(path)) {
-            cli::cli_abort("No cached OAuth file found for userID: {.field {oauth_userid}}.")
+            cli::cli_abort(sprintf(
+                "No cached OAuth file found for userID: {.field %s}.",
+                oauth_userid
+            ))
         }
     }
     if (is.null(path)) {
-        token_files <- dir(
-            cache_dir(),
-            recursive = TRUE,
-            full.names = TRUE,
-            pattern = "-token\\.rds$"
-        )
+        token_files <- oauth_token_files()
+        oauth_userids_file <- oauth_userids_path()
         if (length(token_files)) {
-            oauth_userids_file <- oauth_userids_path()
             if (file.exists(oauth_userids_file)) {
                 oauth_userids <- unique(readRDS(oauth_userids_file))
                 missing <- 0L
@@ -177,18 +204,26 @@ zotero_oauth_path <- function(oauth_userid = NULL, call = caller_env()) {
                     if (length(oauth_userids)) {
                         saveRDS(oauth_userids, oauth_userids_file)
                     } else if (unlink(oauth_userids_file, force = TRUE)) {
-                        cli::cli_warn(
-                            "cannot remove file {.path {oauth_userids_file}}"
-                        )
+                        cli::cli_warn(sprintf(
+                            "Unable to remove file {.path %s}",
+                            oauth_userids_file
+                        ))
                     }
                 }
             } else {
                 ordering <- order(file.mtime(token_files), decreasing = TRUE)
                 path <- token_files[ordering[1L]]
             }
+        } else if (file.exists(oauth_userids_file)) {
+            if (unlink(oauth_userids_file, force = TRUE)) {
+                cli::cli_warn(sprintf(
+                    "Unable to remove file {.path %s}",
+                    oauth_userids_file
+                ))
+            }
         }
     }
-    if (is.null(path)) browser() else path
+    path
 }
 
 as_key <- function(key) UseMethod("as_key")
@@ -231,8 +266,7 @@ zotero_oauth_key <- function() {
     # oauth_token_secret
     # userID
     # username
-    oauth_key <- zotero_oauth_acess(client, token, verifier)
-    structure(oauth_key, class = "zotero_oauth_key")
+    zotero_oauth_access(client, token, verifier)
 }
 
 #' @export
@@ -248,11 +282,14 @@ zotero_oauth_client <- function(redirect_uri = NULL) {
     redirect <- httr2_fun("normalize_redirect_uri")(redirect_uri)
     redirect$local_display <- .Platform$GUI == "AQUA" ||
         grepl("^(localhost|):", Sys.getenv("DISPLAY"))
-    structure(list(
-        secret = .secret$client_secret,
-        key = .secret$client_key,
-        redirect = redirect
-    ), class = "zotero_oauth_client")
+    structure(
+        list(
+            secret = .secret$client_secret,
+            key = .secret$client_key,
+            redirect = redirect
+        ),
+        class = "zotero_oauth_client"
+    )
 }
 
 zotero_oauth_token <- function(client) {
@@ -274,10 +311,7 @@ zotero_oauth_token <- function(client) {
         token_data, .subset, character(1L), 1L,
         USE.NAMES = FALSE
     )
-    token_values <- vapply(
-        token_data, .subset, character(1L), 2L,
-        USE.NAMES = FALSE
-    )
+    token_values <- lapply(token_data, .subset, 2L)
     names(token_values) <- token_names
     token_values
 }
@@ -285,7 +319,7 @@ zotero_oauth_token <- function(client) {
 zotero_oauth_authorize <- function(client, token) {
     req <- httr2::req_url_query(
         httr2::request("https://www.zotero.org/oauth/authorize"),
-        oauth_token = token["oauth_token"],
+        oauth_token = token$oauth_token,
         library_access = 1L,
         notes_access = 1L,
         write_access = 1L,
@@ -344,7 +378,7 @@ zotero_oauth_authorize <- function(client, token) {
     }
 }
 
-zotero_oauth_acess <- function(client, token, verifier) {
+zotero_oauth_access <- function(client, token, verifier) {
     req <- httr2::request("https://www.zotero.org/oauth/access")
     req <- httr2::req_method(req, "POST")
     req <- httr2::req_headers(req, Authorization = oauth_header(oauth_params(
@@ -352,26 +386,23 @@ zotero_oauth_acess <- function(client, token, verifier) {
         key = httr2_fun("unobfuscate")(client$key()),
         secret = httr2_fun("unobfuscate")(client$secret()),
         redirect = client$redirect,
-        token = token["oauth_token"],
-        token_secret = token["oauth_token_secret"],
+        token = token$oauth_token,
+        token_secret = token$oauth_token_secret,
         verifier = verifier
     )))
-    api_keys <- httr2::resp_body_string(httr2::req_perform(req))
-    api_keys <- strsplit(
-        .subset2(strsplit(api_keys, "&", fixed = TRUE), 1L),
+    accessed_token <- httr2::resp_body_string(httr2::req_perform(req))
+    accessed_token <- strsplit(
+        .subset2(strsplit(accessed_token, "&", fixed = TRUE), 1L),
         "=",
         fixed = TRUE
     )
-    key_names <- vapply(
-        api_keys, .subset, character(1L), 1L,
+    token_names <- vapply(
+        accessed_token, .subset, character(1L), 1L,
         USE.NAMES = FALSE
     )
-    key_values <- vapply(
-        api_keys, .subset, character(1L), 2L,
-        USE.NAMES = FALSE
-    )
-    names(key_values) <- key_names
-    key_values
+    token_values <- lapply(accessed_token, .subset, 2L)
+    names(token_values) <- token_names
+    structure(token_values, class = "zotero_oauth_key")
 }
 
 oauth_params <- function(method, url, key, secret, redirect,

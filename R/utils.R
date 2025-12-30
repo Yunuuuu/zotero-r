@@ -11,7 +11,7 @@ config_dir <- function() pkg_dir("config")
 dir_create <- function(path, ...) {
     if (!dir.exists(path) &&
         !dir.create(path = path, showWarnings = FALSE, ...)) {
-        cli::cli_abort("Cannot create directory {.path {path}}")
+        cli::cli_abort("Unable to create directory {.path {path}}")
     }
     invisible(path)
 }

@@ -7,6 +7,7 @@
 zotero_key()
 }
 \description{
-This function returns the currently cached Zotero API key from the internal
-cache. The key is used for authenticated requests to the Zotero API.
+This function returns the global Zotero API key, which is set by
+\code{\link[=zotero_auth]{zotero_auth()}}.  The key is used for authenticated requests to the Zotero
+API.
 }
