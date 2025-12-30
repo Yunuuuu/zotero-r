@@ -14,8 +14,8 @@ to the base URL (\verb{https://api.zotero.org}).}
 URL.  Defaults to \code{NULL}.}
 }
 \value{
-A \code{httr2} request object that can be passed to \code{zotero_perform} for
-execution.
+A httr2 \link[httr2:request]{request} object that can be passed to
+\code{\link[=zotero_perform]{zotero_perform()}} for execution.
 }
 \description{
 This function constructs a request to the Zotero API. It allows appending

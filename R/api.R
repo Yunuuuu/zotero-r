@@ -8,8 +8,8 @@
 #' @param query Optional named list of query parameters to add to the request
 #'   URL.  Defaults to `NULL`.
 #'
-#' @return A `httr2` request object that can be passed to `zotero_perform` for
-#' execution.
+#' @return A httr2 [request][httr2::request] object that can be passed to
+#' [`zotero_perform()`] for execution.
 #' @seealso <https://www.zotero.org/support/dev/web_api/v3/basics>
 #' @export
 zotero_request <- function(..., query = NULL) {
@@ -47,6 +47,42 @@ zotero_req_key.zotero_oauth_key <- function(key) {
     zotero_request("keys", key$oauth_token_secret)
 }
 
+#' Zotero Groups Access Information
+#'
+#' This function retrieves the set of groups the current API key has access to,
+#' including public groups the key owner belongs to, even if the key doesn't
+#' have explicit permissions for those groups. It is useful for identifying
+#' which groups a user or API key can interact with, including public groups and
+#' groups that the owner has membership in.
+#'
+#' @param userid A single string representing the `userID` or `groupID`.  User
+#' IDs differ from usernames and can be obtained from the [`API
+#' Keys`](https://www.zotero.org/settings/keys) page or [`zotero_req_key()`].
+#' @export
+zotero_req_groups <- function(userid) {
+    assert_string(userid, allow_empty = FALSE)
+    zotero_request("users", userid, "groups")
+}
+
+#' Zotero Search Metadata Request
+#'
+#' @param prefix A single string representing either a `userID` or `groupID`.
+#' User IDs differ from usernames and can be obtained from the
+#' [`API Keys`](https://www.zotero.org/settings/keys) page or
+#' [`zotero_req_key()`]. Group IDs are different from group names and can be
+#' retrieved from [`zotero_req_groups()`].
+#'
+#' @param search A specific saved search in the library. If `NULL`, the function
+#' will get all saved searches in the library.
+#'
+#' @note Only search metadata is currently available, not search results.
+#' @export
+zotero_req_search <- function(prefix, search = NULL) {
+    assert_string(prefix, allow_empty = FALSE)
+    assert_string(search, allow_empty = FALSE, allow_null = TRUE)
+    zotero_request(prefix, "searches", search)
+}
+
 #' Perform the Zotero API Request
 #'
 #' This function executes a Zotero API request created by `zotero_request`. It
@@ -54,8 +90,8 @@ zotero_req_key.zotero_oauth_key <- function(key) {
 #' the input. If a single request is provided, it performs the request. If a
 #' list of requests is provided, it performs the requests in parallel.
 #'
-#' @param req A `httr2` request or a list of `httr2` request objects created by
-#'   [`zotero_request()`].
+#' @param req A httr2 [request][httr2::request] or a list of
+#'   [request][httr2::request] objects created by [`zotero_request()`].
 #' @param ... Additional arguments passed to method dispatch.
 #'  - When `req` is a single request, these arguments are passed to
 #'    [`httr2::req_perform()`].

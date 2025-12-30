@@ -7,8 +7,8 @@
 zotero_perform(req, ..., key = NULL)
 }
 \arguments{
-\item{req}{A \code{httr2} request or a list of \code{httr2} request objects created by
-\code{\link[=zotero_request]{zotero_request()}}.}
+\item{req}{A httr2 \link[httr2:request]{request} or a list of
+\link[httr2:request]{request} objects created by \code{\link[=zotero_request]{zotero_request()}}.}
 
 \item{...}{Additional arguments passed to method dispatch.
 \itemize{
