@@ -13,6 +13,7 @@ Imports:
     httpuv,
     httr2,
     openssl,
+    R6,
     rlang,
     utils
 Depends: 

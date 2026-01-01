@@ -8,7 +8,7 @@ zotero_perform(req, ..., key = NULL)
 }
 \arguments{
 \item{req}{A httr2 \link[httr2:request]{request} or a list of
-\link[httr2:request]{request} objects created by \code{\link[=zotero_request]{zotero_request()}}.}
+\link[httr2:request]{request} objects created by \code{\link{Zotero}}.}
 
 \item{...}{Additional arguments passed to method dispatch.
 \itemize{
@@ -18,15 +18,14 @@ zotero_perform(req, ..., key = NULL)
 \code{\link[httr2:req_perform_parallel]{httr2::req_perform_parallel()}}.
 }}
 
-\item{key}{Optional authenticated key for the request, if required. By
-default, the function will attempt to use the \link[=zotero_key]{global API key}.}
+\item{key}{Optional authenticated key for the request.}
 }
 \value{
 The response from the Zotero API.
 }
 \description{
-This function executes a Zotero API request created by \code{zotero_request}. It
-uses method dispatch to handle different types of request execution based on
-the input. If a single request is provided, it performs the request. If a
-list of requests is provided, it performs the requests in parallel.
+This function executes a Zotero API request created by \code{\link{Zotero}}. It uses
+method dispatch to handle different types of request execution based on the
+input. If a single request is provided, it performs the request. If a list of
+requests is provided, it performs the requests in parallel.
 }
