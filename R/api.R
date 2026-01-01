@@ -362,12 +362,12 @@ Zotero <- R6::R6Class(
                 cli::cli_abort(
                     c(
                         paste(
-                            "The Zotero API key is not set. Please set it before making the request.",
+                            "The API key is not set. Please set it before making the request.",
                             "You can set the key using one of the following methods:"
                         ),
-                        "i" = "{.fn $key_set()}: to set an API key manually.",
-                        "i" = "{.fn $key_oauth()}: to authenticate via OAuth.",
-                        "i" = "{.fn $key_read()}: to read from the cached API key."
+                        "i" = "{.fn $key_set}: to set an API key manually.",
+                        "i" = "{.fn $key_oauth}: to authenticate via OAuth.",
+                        "i" = "{.fn $key_read}: to read from the cached API key."
                     ),
                     call = call
                 )
