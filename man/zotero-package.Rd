@@ -8,6 +8,14 @@
 \description{
 R wrapper for the Zotero API.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/Yunuuuu/zotero-r}
+  \item Report bugs at \url{https://github.com/Yunuuuu/zotero-r/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Yun Peng \email{pengyun.me@outlook.com} (\href{https://orcid.org/0000-0003-2801-3332}{ORCID})
 

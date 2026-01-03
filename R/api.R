@@ -1,18 +1,41 @@
 #' Zotero instance
+#'
+#' @param tags A boolean value indicating whether to retrieve the tags
+#' associated with the request.
+#' @param collection A specific collection in the library.
+#' @param item A specific saved search in the library.
+#' @param search A specific saved search in the library.
+#' @seealso
+#' A full list of methods can be found here:
+#' <http://www.zotero.org/support/dev/server_api>
 #' @export
 Zotero <- R6::R6Class(
     "Zotero",
     public = list(
 
         #' @description Set Zotero API key directly
-        #' @param key A string representing the Zotero API key. If provided.
-        #'   Visit <https://www.zotero.org/settings/keys> to create a private
-        #'   API key.
+        #' @param key A character string representing the Zotero API key. You
+        #'   can create your private API key by visiting
+        #'   <https://www.zotero.org/settings/keys>. If the `key` argument is
+        #'   not provided, the function will attempt to use the value from the
+        #'   environment variable `ZOTERO_API`.
         key_set = function(key) {
+            if (missing(key)) {
+                key <- Sys.getenv("ZOTERO_API")
+                if (!nzchar(key)) {
+                    cli::cli_abort(paste(
+                        "{.arg key} must be provdied",
+                        "or you should set the environment variable {.env ZOTERO_API}"
+                    ))
+                }
+                cli::cli_inform(c(
+                    "v" = "Used Environment variable: {.env ZOTERO_API}"
+                ))
+            }
             assert_string(key, allow_empty = FALSE)
             private$reset()
             private$api_key <- key
-            private$cached <- FALSE
+            private$key_cached <- FALSE
             invisible(self)
         },
 
@@ -23,16 +46,16 @@ Zotero <- R6::R6Class(
                 cli::cli_abort("OAuth authorization requires an interactive session.")
             }
             key_data <- zotero_oauth_token(
-                private$request,
-                private$authorize,
-                private$access
+                private$request, private$authorize, private$access
             )
             private$reset()
+            # we can use the `token secret` the same way we already used a
+            # Zotero API key
             private$api_key <- .subset2(key_data, "oauth_token_secret")
             private$userid <- .subset2(key_data, "userid")
             private$username <- .subset2(key_data, "username")
             private$token <- .subset2(key_data, "oauth_token")
-            private$cached <- FALSE
+            private$key_cached <- FALSE
             cli::cli_inform(c(
                 "v" = sprintf(
                     "OAuth authorization for user ID: {.field %s}",
@@ -41,6 +64,7 @@ Zotero <- R6::R6Class(
             ))
             invisible(self)
         },
+
         #' @description Read the cached Zotero API key
         #' @param userid A string of user ID. If provided, the function will
         #'   attempt to find the cached key for this user. If not provided, the
@@ -61,7 +85,7 @@ Zotero <- R6::R6Class(
             private$userid <- .subset2(key_data, "userid")
             private$username <- .subset2(key_data, "username")
             private$token <- .subset2(key_data, "token")
-            private$cached <- TRUE
+            private$key_cached <- TRUE
             invisible(self)
         },
 
@@ -89,7 +113,7 @@ Zotero <- R6::R6Class(
                 credential_path(private$userid),
                 I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
             )
-            private$cached <- TRUE
+            private$key_cached <- TRUE
 
             # Save the user ID of the credential key for future reference
             credential_userids_file <- credential_userids_path()
@@ -149,7 +173,7 @@ Zotero <- R6::R6Class(
         key_groups = function() {
             if (is.null(private$groups)) {
                 req <- self$request("users", self$key_userid(), "groups")
-                resp <- httr2::req_perform(req)
+                resp <- private$req_perform(req)
                 private$groups <- httr2::resp_body_json(resp)
             }
             private$groups
@@ -165,12 +189,12 @@ Zotero <- R6::R6Class(
             req <- self$request("keys", private$api_key)
             req <- httr2::req_method(req, "DELETE")
             req <- httr2::req_error(req, is_error = function(resp) FALSE)
-            resp <- httr2::req_perform(req)
+            resp <- private$req_perform(req)
             status <- httr2::resp_status(resp)
 
             # Authentication errors (e.g., invalid API key or insufficient
             # privileges) will return a 403 Forbidden
-            if (private$cached &&
+            if (private$key_cached &&
                 (!httr2::resp_is_error(resp) || status == 403L)) {
                 userid <- self$key_userid()
                 # remove the credential file
@@ -225,19 +249,19 @@ Zotero <- R6::R6Class(
         #' the `$key_userid()` method. Group IDs are distinct from group names
         #' and can be obtained via the `$key_groups()` method.
         #'
-        #' If no `library_id` is provided, the method will return the currently
-        #' used library. If `library_id` is set to `NULL`, the library will be
-        #' reset to the default.  Otherwise, if a `library_id` is provided,
-        #' `library_type` will default to `"group"`, as it is uncommon for users
-        #' to set a `user` type with a library ID that differs from the current
-        #' API key's user ID.  If a `library_id` is provided with a non-default
-        #' `library_type`, the `library_type` (`"user"` or `"group"`) must be
-        #' specified.
+        #' If no **library_id** is provided, the method will return the
+        #' currently used library. If **library_id** is set to `NULL`, the
+        #' library will be reset to the default.  Otherwise, if a **library_id**
+        #' is provided, **library_type** will default to `"group"`, as it is
+        #' uncommon for users to set a `user` type with a library ID that
+        #' differs from the current API key's user ID.  If a **library_id** is
+        #' provided with a non-default **library_type**, the **library_type**
+        #' (`"user"` or `"group"`) must be specified.
         #' @param library_id A string representing either a `user ID` or
         #' `group ID` for the library.
         #' @param library_type A string of `"user"` or `"group"` representing
         #' the type for the library.
-        #' @return A `zotero_library` object when `library_id` is missing,
+        #' @return A `zotero_library` object when **library_id** is missing,
         #' otherwise, returns the Zotero instance itself, allowing for method
         #' chaining.
         library = function(library_id, library_type) {
@@ -246,33 +270,138 @@ Zotero <- R6::R6Class(
                     cli::cli_warn("{.arg library_type} cannot be used when {.arg library_id} is missing")
                 }
                 # If no library_id is provided, use the userid by default
-                if (is.null(private$library_id)) {
+                if (is.null(private$zlibrary)) {
                     library_id <- self$key_userid()
                     library_type <- "user"
+                    return(zotero_library(library_id, library_type))
                 } else {
-                    library_id <- private$library_id
-                    library_type <- private$library_type
+                    return(private$zlibrary)
                 }
-                return(zotero_library(library_id, library_type))
             }
-            assert_string(library_id, allow_empty = FALSE, allow_null = TRUE)
+
             if (is.null(library_id)) {
                 if (!missing(library_type)) {
                     cli::cli_warn("{.arg library_type} cannot be used when {.arg library_id} is {.code NULL}")
                 }
-                library_type <- NULL
-            } else if (missing(library_type)) {
-                # Default library_type to "group" if missing (as it's uncommon
-                # for users to use "user" type)
-                library_type <- "group"
+                private$zlibrary <- NULL
             } else {
-                library_type <- rlang::arg_match0(
-                    library_type,
-                    c("user", "group")
-                )
+                if (missing(library_type)) {
+                    # Default library_type to "group" if missing (as it's
+                    # uncommon for users to use "user" type)
+                    library_type <- "group"
+                }
+                private$zlibrary <- zotero_library(library_id, library_type)
             }
-            private$library_id <- library_id
-            private$library_type <- library_type
+            invisible(self)
+        },
+
+        #' @description Determine or Set the global searching parameters
+        #'
+        #' @param sort The name of the field by which entries are sorted.
+        #' @param direction The sorting direction of the field specified in the
+        #' sort parameter. One of `"asc"` or `"desc"`.
+        #' @param limit The maximum number of results to return with a single
+        #' request. Required for export formats. An integer between 1-100.
+        #' @param start The index of the first result. Combine with the `limit`
+        #' parameter to select a slice of the available results.
+        #' @param item_search,tag_search A [`zotero_search()`] object to
+        #' refine the item/tag searching.
+        #' @param format Format of the response.
+        #' @param format_includes Formats to include in the response, multiple
+        #' formats can be specified.
+        #' @param format_contents The format of the Atom response's <content>
+        #' node, multiple formats can be specified.
+        #' @param style Citation style for formatted references. You can provide
+        #' either the name of a style (e.g., `"apa"`) or a URL to a custom CSL
+        #' file. Only valid when `format = "bib"`, or when `format_includes` or
+        #' `format_contents` contains `"bib"` or `"citation"`.
+        #' @param linkwrap A boolean indicating whether URLs and DOIs should be
+        #' returned as links. Only valid when `format = "bib"`, or when
+        #' `format_includes` or `format_contents` contains `"bib"` or
+        #' `"citation"`.
+        #' @param locale A character string specifying the locale to use for
+        #' bibliographic formatting (e.g., `"en-US"`). Only valid when `format =
+        #' "bib"`, or when `format_includes` or `format_contents` contains
+        #' `"bib"` or `"citation"`.
+        parameters = function(sort = NULL, direction = NULL,
+                              limit = NULL, start = NULL,
+                              # Search Parameters
+                              item_search = NULL, tag_search = NULL,
+                              # The following parameters affect the format of
+                              # data returned from read requests
+                              format = NULL,
+                              format_includes = NULL,
+                              format_contents = NULL,
+                              style = NULL, linkwrap = NULL, locale = NULL) {
+            assert_string(sort, allow_empty = FALSE, allow_null = TRUE)
+            if (!is.null(direction)) {
+                direction <- rlang::arg_match0(direction, c("asc", "desc"))
+            }
+            assert_number_whole(limit, min = 1, max = 100, allow_null = TRUE)
+            assert_number_whole(start, min = 0, allow_null = TRUE)
+
+            # General Parameters
+            if (!is.null(format)) {
+                format <- rlang::arg_match0(format, c(
+                    "atom", "bib", "json", "keys", "versions",
+                    # Item Export Formats
+                    # The following bibliographic data formats can be used as
+                    # `format`, `include`, and `content` parameters for items
+                    # requests:
+                    "bibtex", "biblatex", "bookmarks", "coins",
+                    "csljson", "csv", "mods", "refer", "rdf_bibliontology",
+                    "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
+                ))
+            }
+
+            # Parameters for "format=json"
+            if (!is.null(format_includes)) {
+                format_includes <- unique(as.character(format_includes))
+                format_includes <- rlang::arg_match0(format_includes, c(
+                    "bib", "citation", "data",
+                    # Item Export Formats
+                    # The following bibliographic data formats can be used as
+                    # `format`, `include`, and `content` parameters for items
+                    # requests:
+                    "bibtex", "biblatex", "bookmarks", "coins",
+                    "csljson", "csv", "mods", "refer", "rdf_bibliontology",
+                    "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
+                ))
+            }
+
+            # Parameters for "format=atom"
+            if (!is.null(format_contents)) {
+                format_contents <- unique(as.character(format_contents))
+                format_contents <- rlang::arg_match0(format_contents, c(
+                    "bib", "citation", "html", "json", "none",
+                    # Item Export Formats
+                    # The following bibliographic data formats can be used as
+                    # `format`, `include`, and `content` parameters for items
+                    # requests:
+                    "bibtex", "biblatex", "bookmarks", "coins",
+                    "csljson", "csv", "mods", "refer", "rdf_bibliontology",
+                    "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
+                ))
+            }
+            # Parameters for "format=bib", "include/content=bib",
+            # "include/content=citation": style, linkwrap, locale
+            assert_bool(style, allow_empty = FALSE, allow_null = TRUE)
+            assert_bool(linkwrap, allow_null = TRUE)
+            assert_bool(locale, allow_empty = FALSE, allow_null = TRUE)
+            params <- list(
+                sort = sort, direction = direction,
+                limit = limit, start = start,
+                item_search = item_search, tag_search = tag_search,
+                format = format,
+                format_includes = format_includes,
+                format_contents = format_contents,
+                style = style, linkwrap = linkwrap, locale = locale
+            )
+            params <- params[
+                !vapply(params, is.null, logical(1L), USE.NAMES = FALSE)
+            ]
+            if (length(params) == 0L) return(private$params) # styler: off
+            private$params[names(params)] <- params
             invisible(self)
         },
 
@@ -285,37 +414,233 @@ Zotero <- R6::R6Class(
         #' from specific libraries.
         #' @param ... Character strings representing the path components to
         #' append to the Zotero API base URL.
+        #' @param library A [`zotero_library()`] object. If provided, the
+        #' request URL will be prefixed with the relevant library path
+        #' (`/users/<userID>` or `/groups/<groupID>`), ensuring that the request
+        #' is scoped to a specific library.
         #' @param query Optional named list of query parameters to be added to
         #' the request URL.
-        #' @param prefix Whether to include the library-specific prefix. If
-        #' `TRUE`, the request URL will be prefixed with the relevant library
-        #' path (`/users/<userID>` or `/groups/<groupID>`), ensuring that the
-        #' request is scoped to a specific library.
         #' @return A `httr2` [request][httr2::request] object that can be used
         #' to send the API request.
-        request = function(..., query = NULL, prefix = NULL) {
+        request = function(..., library = NULL, query = NULL) {
             # Maybe some requests don't need the api key? we don't requre
             # `api_key` here.
             req <- httr2::request(private$api)
-            if (isTRUE(prefix)) req <- private$library_prefix(req)
+            if (!is.null(library)) req <- library_prefix(req, library)
             req <- httr2::req_url_path_append(req, ...)
             if (!is.null(query)) req <- httr2::req_url_query(req, !!!query)
+            req <- httr2::req_user_agent(req, user_agent())
+            req <- httr2::req_headers(req, "zotero-api-version" = "3")
             if (!is.null(private$api_key)) {
-                req <- httr2::req_headers(req,
-                    Authorization = sprintf("Bearer %s", private$api_key)
-                )
+                req <- httr2::req_auth_bearer_token(req, private$api_key)
             }
-            req
+
+            # Rate Limiting:
+            # https://www.zotero.org/support/dev/web_api/v3/basics#rate_limiting
+            #
+            # 1. Error handling for responses with backoff
+            #
+            # 2. If a client has made too many requests within a given time
+            # period or is making too many concurrent requests, the API may
+            # return `429` Too Many Requests, potentially with a `Retry-After`:
+            # <seconds> header. Clients receiving a `429` should wait at least
+            # the number of seconds indicated in the header before making
+            # further requests, or to perform an exponential backoff if
+            # `Retry-After` isn't provided. They should also reduce their
+            # overall request rate and/or concurrency to avoid repeatedly
+            # getting `429`s, which may result in stricter throttling or
+            # temporary blocks.
+            httr2::req_retry(req,
+                max_tries = 3L,
+                is_transient = function(resp) {
+                    httr2::resp_is_error(resp) &&
+                        # For Retry-After
+                        #
+                        # `Retry-After` can also be included with 503 Service
+                        # Unavailable responses when the server is undergoing
+                        # maintenance. But we won't retry it.
+                        (httr2::resp_status(resp) == 429L ||
+                            # For responses with backoff
+                            httr2::resp_header_exists(resp, "Backoff"))
+                },
+                after = function(resp) {
+                    backoff <- httr2::resp_header(resp, "Backoff")
+                    retry_backoff <- httr2::resp_header(resp, "Retry-After")
+                    if (!is.null(backoff) && !is.null(retry_backoff)) {
+                        backoff <- as.integer(backoff)
+                        retry_backoff <- as.integer(retry_backoff)
+                        max(backoff, retry_backoff)
+                    } else if (is.null(backoff) && is.null(retry_backoff)) {
+                        NA # Exponential Backoff
+                    } else if (is.null(backoff)) {
+                        as.integer(retry_backoff)
+                    } else {
+                        as.integer(backoff)
+                    }
+                }
+            )
         },
 
-        #' @description Get saved searches from Zotero API
+        #' @description Collections in the library
+        collections = function() {
+            req <- self$request("collections", library = self$library())
+            private$req_perform(req)
+        },
+
+        #' @description Top-level collections in the library
+        collections_top = function() {
+            req <- self$request("collections", "top", library = self$library())
+            private$req_perform(req)
+        },
+
+        #' @description A specific collection in the library
+        collection = function(collection) {
+            req <- private$req_collection(collection)
+            private$req_perform(req)
+        },
+
+        #' @description Subcollections within a specific collection in the
+        #' library
+        collection_subgroups = function(collection) {
+            req <- private$req_collection(collection, "collections")
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated with a specific collection in the
+        #' library
+        collection_tags = function(collection) {
+            req <- private$req_collection(collection, "tags")
+            private$req_perform(req)
+        },
+
+        #' @description Items within a specific collection in the library
+        collection_items = function(collection) {
+            req <- private$req_collection(collection, "items")
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated with the Items within a specific
+        #' collection in the library
+        collection_items_tags = function(collection) {
+            req <- private$req_collection(collection, "items", "tags")
+            private$req_perform(req)
+        },
+
+        #' @description Top-level items within a specific collection in the
+        #' library
+        collection_items_top = function(collection) {
+            req <- private$req_collection(collection, "items", "top")
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated with the top-level items within a
+        #' specific collection in the library
+        collection_items_top_tags = function(collection) {
+            req <- private$req_collection(collection, "items", "top", "tags")
+            private$req_perform(req)
+        },
+
+        #' @description All items in the library, excluding trashed items
+        items = function() {
+            req <- self$request("items", library = self$library())
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated all items in the library, excluding
+        #' trashed items
+        items_tags = function() {
+            req <- self$request("items", "tags", library = self$library())
+            private$req_perform(req)
+        },
+
+        #' @description Top-level items in the library, excluding trashed items
+        items_top = function() {
+            req <- self$request("items", "top", library = self$library())
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated with the top-level items in the library
+        items_top_tags = function() {
+            req <- self$request(
+                "items", "top", "tags",
+                library = self$library()
+            )
+            private$req_perform(req)
+        },
+
+        #' @description Items in the trash
+        items_trash = function() {
+            req <- self$request("items", "trash", library = self$library())
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated with the items in the trash
+        items_trash_tags = function() {
+            req <- self$request(
+                "items", "trash", "tags",
+                library = self$library()
+            )
+            private$req_perform(req)
+        },
+
+        #' @description A specific item in the library
+        item = function(item) {
+            req <- private$req_item(item)
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated with a specific item in the library
+        item_tags = function(item) {
+            req <- private$req_item(item, "tags")
+            private$req_perform(req)
+        },
+
+        #' @description Child items under a specific item
+        item_children = function(item) {
+            req <- private$req_item(item, "children")
+            private$req_perform(req)
+        },
+
+        #' @description Items in My Publications
+        publication_items = function() {
+            req <- self$request(
+                "publications", "items",
+                library = self$library()
+            )
+            private$req_perform(req)
+        },
+
+        #' @description Tags associated with the items in My Publications
+        publication_items_tags = function() {
+            req <- self$request(
+                "publications", "items", "tags",
+                library = self$library()
+            )
+            private$req_perform(req)
+        },
+
+        #' @description Get all saved searches in the library
         #' @details Only get the saved searches, not search results.
-        #' @param search_key A specific saved search in the library. If `NULL`,
-        #' the method will get all saved searches in the library.
-        searches = function(search_key = NULL) {
-            assert_string(search_key, allow_empty = FALSE, allow_null = TRUE)
-            req <- self$request("searches", search_key, prefix = TRUE)
-            httr2::req_perform(req)
+        saved_searches = function() {
+            req <- self$request("searches", library = self$library())
+            private$req_perform(req)
+        },
+
+        #' @description Get a specific saved search in the library
+        #' @details Only get the saved searches, not search results.
+        saved_search = function(search) {
+            assert_string(search, allow_empty = FALSE)
+            req <- self$request(
+                "searches", search,
+                library = self$library()
+            )
+            private$req_perform(req)
+        },
+
+        #' @description All tags in the library
+        tags = function() {
+            req <- self$request("tags", library = self$library())
+            private$req_perform(req)
         }
     ),
     private = list(
@@ -323,25 +648,28 @@ Zotero <- R6::R6Class(
         oauth_request = "https://www.zotero.org/oauth/request",
         oauth_access = "https://www.zotero.org/oauth/access",
         oauth_authorize = "https://www.zotero.org/oauth/authorize",
-        library_id = NULL,
-        library_type = NULL,
+        zlibrary = NULL,
         api_key = NULL,
         userid = NULL,
         username = NULL,
         token = NULL, # only used for oauth authorization
         access = NULL,
         groups = NULL,
-        cached = NULL,
+        key_cached = NULL,
+        backoff_startup = NULL,
+        backoff_duration = NULL,
+        params = NULL,
         reset = function() {
-            private$library_id <- NULL
-            private$library_type <- NULL
+            private$zlibrary <- NULL
             private$api_key <- NULL
             private$userid <- NULL
             private$username <- NULL
             private$token <- NULL
             private$access <- NULL
             private$groups <- NULL
-            private$cached <- NULL
+            private$key_cached <- NULL
+            private$backoff_startup <- NULL
+            private$backoff_duration <- NULL
         },
         has_full_key_info = function() {
             !is.null(private$userid) &&
@@ -350,10 +678,10 @@ Zotero <- R6::R6Class(
         },
         complete_key_info = function() {
             req <- self$request("keys", private$api_key)
-            resp <- httr2::req_perform(req)
+            resp <- private$req_perform(req)
             data <- httr2::resp_body_json(resp)
-            private$userid <- .subset2(data, "userID")
-            private$username <- .subset2(data, "username")
+            private$userid <- as.character(.subset2(data, "userID"))
+            private$username <- as.character(.subset2(data, "username"))
             private$access <- .subset2(data, "access")
         },
         #' @importFrom rlang caller_env
@@ -373,32 +701,183 @@ Zotero <- R6::R6Class(
                 )
             }
         },
-        # @description Prefixing library-specific paths for the request
-        # @details
-        # This method includes support for prefixing library-specific paths
-        # (e.g., `/users/<userID>` or `/groups/<groupID>`) for the request.
-        library_prefix = function(req) {
-            library <- self$library()
-            httr2::req_url_path_append(
-                req,
-                paste0(.subset2(library, "type"), "s"),
-                .subset2(library, "id")
+        backoff_setup = function(resp) {
+            # If the API servers are overloaded, the API may include a
+            # `Backoff`: <seconds> HTTP header in responses, indicating that the
+            # client should perform the minimum number of requests necessary to
+            # maintain data consistency and then refrain from making further
+            # requests for the number of seconds indicated. `Backoff` can be
+            # included in any response, including successful ones.
+            #
+            # We only setup backup in successful response
+            backoff <- httr2::resp_header(resp, "Backoff")
+            if (!is.null(backoff)) {
+                private$backoff_startup <- Sys.time()
+                private$backoff_duration <- as.integer(backoff)
+            }
+        },
+        backoff_reset = function() {
+            private$backoff_startup <- NULL
+            private$backoff_duration <- NULL
+        },
+        backoff_reminder = function() {
+            reminder <- private$backoff_duration -
+                as.integer(Sys.time() - private$backoff_startup)
+            max(reminder, 0L)
+        },
+        backoff_wait = function() {
+            if (!is.null(private$backoff_startup)) {
+                total <- private$backoff_reminder()
+                if (total > 0L) {
+                    cli::cli_progress_bar(
+                        "Throttling backoff",
+                        total = total, clear = TRUE
+                    )
+                    while (TRUE) {
+                        reminder <- private$backoff_reminder()
+                        if (reminder > 0L) {
+                            cli::cli_progress_update(set = total - reminder)
+                        }
+                        break
+                    }
+                    cli::cli_progress_done()
+                }
+                private$backoff_reset()
+            }
+        },
+        req_perform = function(req, ...) {
+            private$backoff_wait() # Wait for backoff of last request
+            resp <- httr2::req_perform(req, ...)
+            private$backoff_setup(resp) # setup backoff for next request
+            resp
+        },
+        req_collection = function(collection, ..., call = caller_env()) {
+            assert_string(collection, allow_empty = FALSE, call = call)
+            self$request("collections", collection,
+                ...,
+                library = self$library()
             )
+        },
+        req_item = function(item, ..., call = caller_env()) {
+            assert_string(item, allow_empty = FALSE, call = call)
+            self$request("items", item, ..., library = self$library())
         }
     )
 )
 
+#' Zotero Library
+#'
+#' @description
+#' This function creates a `zotero_library` object, which represents a specific
+#' Zotero library.  A library is identified by a `user ID` or `group ID`, and
+#' its type is either `"user"` or `"group"`. The `zotero_library` object is used
+#' when specifying the library for API requests to [Zotero] instance, ensuring
+#' that the request is scoped to a specific user or group library.
+#'
+#' @param library_id A string representing either a `user ID` or `group ID` for
+#'   the library. This is the unique identifier for the Zotero library.
+#' @param library_type A string that specifies the type of the library. It can
+#' either be:
+#'   - `"user"`: Represents a user library.
+#'   - `"group"`: Represents a group library.
+#'
+#' @return A `zotero_library` object.
+#' @export
 zotero_library <- function(library_id, library_type) {
+    if ((is.character(library_id) || is.numeric(library_id)) &&
+        (length(library_id) != 1L || is.na(library_id))) {
+        cli::cli_abort("{.arg library_id} must be a single string")
+    }
+    library_type <- rlang::arg_match0(library_type, c("user", "group"))
     structure(
-        list(id = library_id, type = library_type),
+        list(id = as.character(library_id), type = library_type),
         class = "zotero_library"
+    )
+}
+
+library_prefix <- function(request, library) {
+    httr2::req_url_path_append(
+        request,
+        paste0(.subset2(library, "type"), "s"),
+        .subset2(library, "id")
     )
 }
 
 #' @export
 print.zotero_library <- function(x, ...) {
-    cat("<", .subset2(x, "type"), ">", .subset2(x, "id"), "\n", sep = "")
+    cat("<", .subset2(x, "type"), ": ", .subset2(x, "id"), ">\n", sep = "")
     invisible(x)
+}
+
+#' Searching Parameters for Zotero API
+#'
+#' @param quick A character string for a quick search. Use the `mode` parameter
+#' to change the search mode. Currently, only phrase searching is supported.
+#' @param mode A character string specifying the search mode:
+#' - For **items** endpoint, you can use one of the following:
+#'   - `"titleCreatorYear"`: Search by title, creator, and year.
+#'   - `"everything"`: Search across all fields for items.
+#' - For **tags** endpoint, you can use one of the following:
+#'   - `"contains"`: Tag search mode where the query string must be contained in
+#'     the tag.
+#'   - `"startsWith"`: Tag search mode where the query string must match the
+#'     beginning of the tag.
+#' @param include_tags A character vector specifying the tags. Supports Boolean
+#' searches (AND, OR, NOT). See the `Boolean Searches` section for details.
+#' @param include_items A character vector of item keys. Valid only for item
+#' requests. You can specify up to 50 item keys in a single request.
+#' @param include_item_types A character vector specifying item types. Supports
+#' Boolean searches (AND, OR, NOT). See the `Boolean Searches` section for
+#' details.
+#' @param since An integer representing a specific library version. Only items
+#' modified after the specified version (from a previous
+#' **Last-Modified-Version** header) will be returned.
+#' @section Boolean searches:
+#' - `include_item_types = "book"`
+#' - `include_item_types = "book || journalArticle"` (OR)
+#' - `include_item_types = "-attachment"` (NOT)
+#' - `include_tags = "foo"`
+#' - `include_tags = "foo bar"` (tag with space)
+#' - `include_tags = c("foo", "bar")`: Equivalent to`"tag=foo&tag=bar"` (AND)
+#' - `include_tags = "foo bar || bar"` (OR)
+#' - `include_tags = "-foo"` (NOT)
+#' - `include_tags = "\-foo"` (literal first-character hyphen)
+zotero_search <- function(quick = NULL, mode = NULL,
+                          include_tags = NULL,
+                          include_items = NULL,
+                          include_item_types = NULL,
+                          since = NULL) {
+    assert_string(quick, allow_empty = FALSE, allow_null = TRUE)
+    if (!is.null(include_tags)) {
+        include_tags <- as.character(include_tags)
+        if (anyNA(include_tags)) {
+            cli::cli_abort("{.arg include_tags} cannot contain missing value.")
+        }
+    }
+    if (!is.null(mode)) {
+        mode <- rlang::arg_match0(mode, c(
+            "titleCreatorYear", "everything",
+            "contains", "startsWith"
+        ))
+    }
+    if (!is.null(include_items)) include_items <- as.character(include_items)
+    if (!is.null(include_item_types)) {
+        include_item_types <- as.character(include_item_types)
+        if (anyNA(include_item_types)) {
+            cli::cli_abort("{.arg include_item_types} cannot contain missing value.")
+        }
+    }
+    assert_number_whole(since, min = 0, allow_null = TRUE)
+    structure(
+        list(
+            quick = quick, mode = mode,
+            include_tags = include_tags,
+            include_items = include_items,
+            include_item_types = include_item_types,
+            since = since
+        ),
+        class = "zotero_search"
+    )
 }
 
 #' Perform the Zotero API Request
@@ -424,9 +903,7 @@ zotero_perform <- function(req, ..., key = NULL) UseMethod("zotero_perform")
 #' @export
 zotero_perform.httr2_request <- function(req, ..., key = NULL) {
     if (!is.null(key)) {
-        req <- httr2::req_headers(req,
-            Authorization = sprintf("Bearer %s", key)
-        )
+        req <- httr2::req_auth_bearer_token(req, token = key)
     }
     httr2::req_perform(req, ...)
 }
