@@ -68,7 +68,7 @@ Zotero <- R6::R6Class(
         #' @description Read the cached Zotero API key
         #' @param userid A string of user ID. If provided, the function will
         #'   attempt to find the cached key for this user. If not provided, the
-        #'   function will attempt to use the last key used. For your user ID,
+        #'   function will attempt to use the last cached key. For your user ID,
         #'   visit <https://www.zotero.org/settings/keys>.
         key_read = function(userid = NULL) {
             assert_string(userid, allow_empty = FALSE, allow_null = TRUE)

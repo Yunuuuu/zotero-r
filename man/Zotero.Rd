@@ -103,7 +103,7 @@ Read the cached Zotero API key
 \describe{
 \item{\code{userid}}{A string of user ID. If provided, the function will
 attempt to find the cached key for this user. If not provided, the
-function will attempt to use the last key used. For your user ID,
+function will attempt to use the last cached key. For your user ID,
 visit \url{https://www.zotero.org/settings/keys}.}
 }
 \if{html}{\out{</div>}}
