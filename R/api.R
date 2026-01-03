@@ -25,11 +25,11 @@ Zotero <- R6::R6Class(
                 if (!nzchar(key)) {
                     cli::cli_abort(paste(
                         "{.arg key} must be provdied",
-                        "or you should set the environment variable {.env ZOTERO_API}"
+                        "or you should set the environment variable {.envvar ZOTERO_API}"
                     ))
                 }
                 cli::cli_inform(c(
-                    "v" = "Used Environment variable: {.env ZOTERO_API}"
+                    "v" = "Used Environment variable: {.envvar ZOTERO_API}"
                 ))
             }
             assert_string(key, allow_empty = FALSE)
