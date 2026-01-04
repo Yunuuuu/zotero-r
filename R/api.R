@@ -21,8 +21,8 @@ Zotero <- R6::R6Class(
         #'   environment variable `ZOTERO_API`.
         key_set = function(key) {
             if (missing(key)) {
-                key <- Sys.getenv("ZOTERO_API")
-                if (!nzchar(key)) {
+                key <- Sys.getenv("ZOTERO_API", unset = NA, names = FALSE)
+                if (is.na(key)) {
                     cli::cli_abort(paste(
                         "{.arg key} must be provdied",
                         "or you should set the environment variable {.envvar ZOTERO_API}"
