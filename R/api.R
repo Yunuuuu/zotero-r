@@ -5,6 +5,8 @@
 #' @param collection A specific collection in the library.
 #' @param item A specific saved search in the library.
 #' @param search A specific saved search in the library.
+#' @param params A [`zotero_params()`] object defined the parameters used to
+#' create the request.
 #' @seealso
 #' A full list of methods can be found here:
 #' <http://www.zotero.org/support/dev/server_api>
@@ -12,7 +14,8 @@
 Zotero <- R6::R6Class(
     "Zotero",
     public = list(
-
+        #' @description Initialize a new Zotero instance
+        initialize = function() private$params <- zotero_params(),
         #' @description Set Zotero API key directly
         #' @param key A character string representing the Zotero API key. You
         #'   can create your private API key by visiting
@@ -295,7 +298,7 @@ Zotero <- R6::R6Class(
             invisible(self)
         },
 
-        #' @description Determine or Set the global searching parameters
+        #' @description Determine or Set the global parameters
         #'
         #' @param ... Additional arguments passed on to [`zotero_params()`].
         #' @return A `zotero_params` object when `...` is empty, otherwise,
@@ -384,138 +387,237 @@ Zotero <- R6::R6Class(
         },
 
         #' @description Collections in the library
-        collections = function() {
-            req <- self$request("collections", library = self$library())
+        collections = function(params = NULL) {
+            req <- self$request(
+                "collections",
+                query = private$query(params),
+                library = self$library()
+            )
             private$req_perform(req)
         },
 
         #' @description Top-level collections in the library
-        collections_top = function() {
-            req <- self$request("collections", "top", library = self$library())
+        collections_top = function(params = NULL) {
+            req <- self$request(
+                "collections", "top",
+                query = private$query(params),
+                library = self$library()
+            )
             private$req_perform(req)
         },
 
         #' @description A specific collection in the library
-        collection = function(collection) {
-            req <- private$req_collection(collection)
+        collection = function(collection, params = NULL) {
+            req <- private$req_collection(
+                collection,
+                query = private$query(params, pagination_params = FALSE)
+            )
             private$req_perform(req)
         },
 
         #' @description Subcollections within a specific collection in the
         #' library
-        collection_subgroups = function(collection) {
-            req <- private$req_collection(collection, "collections")
+        collection_subgroups = function(collection, params = NULL) {
+            req <- private$req_collection(
+                collection, "collections",
+                query = private$query(params)
+            )
             private$req_perform(req)
         },
 
         #' @description Tags associated with a specific collection in the
         #' library
-        collection_tags = function(collection) {
-            req <- private$req_collection(collection, "tags")
+        collection_tags = function(collection, params = NULL) {
+            req <- private$req_collection(
+                collection, "tags",
+                query = private$query(params, tag_search_params = TRUE)
+            )
             private$req_perform(req)
         },
 
         #' @description Items within a specific collection in the library
-        collection_items = function(collection) {
-            req <- private$req_collection(collection, "items")
+        collection_items = function(collection, params = NULL) {
+            req <- private$req_collection(
+                collection, "items",
+                query = private$query(params, item_search_params = TRUE)
+            )
             private$req_perform(req)
         },
 
         #' @description Tags associated with the Items within a specific
         #' collection in the library
-        collection_items_tags = function(collection) {
-            req <- private$req_collection(collection, "items", "tags")
+        collection_items_tags = function(collection, params = NULL) {
+            req <- private$req_collection(
+                collection, "items", "tags",
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                )
+            )
             private$req_perform(req)
         },
 
         #' @description Top-level items within a specific collection in the
         #' library
-        collection_items_top = function(collection) {
-            req <- private$req_collection(collection, "items", "top")
+        collection_items_top = function(collection, params = NULL) {
+            req <- private$req_collection(
+                collection, "items", "top",
+                query = private$query(params, item_search_params = TRUE)
+            )
             private$req_perform(req)
         },
 
         #' @description Tags associated with the top-level items within a
         #' specific collection in the library
-        collection_items_top_tags = function(collection) {
-            req <- private$req_collection(collection, "items", "top", "tags")
+        collection_items_top_tags = function(collection, params = NULL) {
+            req <- private$req_collection(
+                collection, "items", "top", "tags",
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                )
+            )
             private$req_perform(req)
         },
 
         #' @description All items in the library, excluding trashed items
-        items = function() {
-            req <- self$request("items", library = self$library())
+        items = function(params = NULL) {
+            req <- self$request(
+                "items",
+                query = private$query(params, item_search_params = TRUE),
+                library = self$library()
+            )
             private$req_perform(req)
         },
 
         #' @description Tags associated all items in the library, excluding
         #' trashed items
-        items_tags = function() {
-            req <- self$request("items", "tags", library = self$library())
+        items_tags = function(params = NULL) {
+            req <- self$request(
+                "items", "tags",
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
+                library = self$library()
+            )
             private$req_perform(req)
         },
 
         #' @description Top-level items in the library, excluding trashed items
-        items_top = function() {
-            req <- self$request("items", "top", library = self$library())
+        items_top = function(params = NULL) {
+            req <- self$request(
+                "items", "top",
+                query = private$query(params, item_search_params = TRUE),
+                library = self$library()
+            )
             private$req_perform(req)
         },
 
         #' @description Tags associated with the top-level items in the library
-        items_top_tags = function() {
+        items_top_tags = function(params = NULL) {
             req <- self$request(
                 "items", "top", "tags",
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
                 library = self$library()
             )
             private$req_perform(req)
         },
 
         #' @description Items in the trash
-        items_trash = function() {
-            req <- self$request("items", "trash", library = self$library())
+        items_trash = function(params = NULL) {
+            req <- self$request(
+                "items", "trash",
+                query = private$query(
+                    params,
+                    include_trash_param = FALSE,
+                    item_search_params = TRUE
+                ),
+                library = self$library()
+            )
             private$req_perform(req)
         },
 
         #' @description Tags associated with the items in the trash
-        items_trash_tags = function() {
+        items_trash_tags = function(params = NULL) {
             req <- self$request(
                 "items", "trash", "tags",
+                query = private$query(
+                    params,
+                    include_trash_param = FALSE,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
                 library = self$library()
             )
             private$req_perform(req)
         },
 
         #' @description A specific item in the library
-        item = function(item) {
-            req <- private$req_item(item)
+        item = function(item, params = NULL) {
+            req <- private$req_item(
+                item,
+                query = private$query(
+                    params,
+                    pagination_params = FALSE
+                )
+            )
             private$req_perform(req)
         },
 
         #' @description Tags associated with a specific item in the library
-        item_tags = function(item) {
-            req <- private$req_item(item, "tags")
+        item_tags = function(item, params = NULL) {
+            req <- private$req_item(
+                item, "tags",
+                query = private$query(
+                    params,
+                    tag_search_params = TRUE
+                )
+            )
             private$req_perform(req)
         },
 
         #' @description Child items under a specific item
-        item_children = function(item) {
-            req <- private$req_item(item, "children")
+        item_children = function(item, params = NULL) {
+            req <- private$req_item(
+                item, "children",
+                query = private$query(
+                    params,
+                    item_search_params = TRUE
+                )
+            )
             private$req_perform(req)
         },
 
         #' @description Items in My Publications
-        publication_items = function() {
+        publication_items = function(params = NULL) {
             req <- self$request(
                 "publications", "items",
+                query = private$query(
+                    params,
+                    item_search_params = TRUE
+                ),
                 library = self$library()
             )
             private$req_perform(req)
         },
 
         #' @description Tags associated with the items in My Publications
-        publication_items_tags = function() {
+        publication_items_tags = function(params = NULL) {
             req <- self$request(
                 "publications", "items", "tags",
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
                 library = self$library()
             )
             private$req_perform(req)
@@ -540,8 +642,14 @@ Zotero <- R6::R6Class(
         },
 
         #' @description All tags in the library
-        tags = function() {
-            req <- self$request("tags", library = self$library())
+        tags = function(params = NULL) {
+            req <- self$request("tags",
+                query = private$query(
+                    params,
+                    tag_search_params = TRUE
+                ),
+                library = self$library()
+            )
             private$req_perform(req)
         }
     ),
@@ -653,74 +761,18 @@ Zotero <- R6::R6Class(
             private$backoff_setup(resp) # setup backoff for next request
             resp
         },
-        query = function(params = NULL, sorting = TRUE, search_item = TRUE,
-                         search_tag = TRUE) {
+        query = function(params = NULL, ...) {
             if (is.null(params)) {
                 params <- private$params
             } else {
                 params <- merge(private$params, params)
             }
-            query <- list()
-            query$format <- params$format %||% "json"
-            use_style <- query$format == "bib"
-            if (query$format == "json") {
-                if (is.null(params$format_includes)) {
-                    query$include <- "data"
-                } else {
-                    query$include <- paste(
-                        params$format_includes,
-                        collapse = ","
-                    )
-                    use_style <- use_style ||
-                        any(params$format_includes %in% c("bib", "citation"))
-                }
-            }
-            if (query$format == "atom") {
-                if (is.null(params$format_contents)) {
-                    query$content <- "html"
-                } else {
-                    query$content <- paste(
-                        params$format_contents,
-                        collapse = ","
-                    )
-                    use_style <- use_style ||
-                        any(params$format_contents %in% c("bib", "citation"))
-                }
-            }
-            if (use_style) {
-                query$style <- params$style %||% "chicago-note-bibliography"
-                query$linkwrap <- if (params$linkwrap %||% FALSE) {
-                    "1"
-                } else {
-                    "0"
-                }
-                query$locale <- params$locale %||% "en-US"
-            }
-
-            if (sorting) {
-                if (query$format == "atom") {
-                    query$sort <- "dateAdded"
-                } else {
-                    query$sort <- "dateModified"
-                }
-                query$direction <- params$direction # varies by sort
-                query$limit <- params$limit %||% 25L
-                query$start <- params$start %||% 0L
-            }
-            c(
-                "itemKey", "itemType", "q", "since", "tag",
-                "includeTrashed", "qmode",
-                "itemQ", "itemQMode", "itemTag"
-            )
-            params$item_search <- params$item_search %||%
-                zotero_search()
-            params$tag_search <- params$tag_search %||%
-                zotero_search()
+            query_params(params, ...)
         },
         req_collection = function(collection, ..., call = caller_env()) {
             assert_string(collection, allow_empty = FALSE, call = call)
-            self$request("collections", collection,
-                ...,
+            self$request(
+                "collections", collection, ...,
                 library = self$library()
             )
         },
@@ -773,217 +825,6 @@ library_prefix <- function(request, library) {
 print.zotero_library <- function(x, ...) {
     cat("<", .subset2(x, "type"), ": ", .subset2(x, "id"), ">\n", sep = "")
     invisible(x)
-}
-
-#' Parameters for Zotero API
-#'
-#' @param sort The name of the field by which entries are sorted.
-#' @param direction The sorting direction of the field specified in the
-#' sort parameter. One of `"asc"` or `"desc"`.
-#' @param limit The maximum number of results to return with a single
-#' request. Required for export formats. An integer between 1-100.
-#' @param start The index of the first result. Combine with the `limit`
-#' parameter to select a slice of the available results.
-#' @param item_search,tag_search A [`zotero_search()`] object to
-#' refine the item/tag searching.
-#' @param format Format of the response.
-#' @param format_includes Formats to include in the response, multiple
-#' formats can be specified.
-#' @param format_contents The format of the Atom response's <content>
-#' node, multiple formats can be specified.
-#' @param style Citation style for formatted references. You can provide
-#' either the name of a style (e.g., `"apa"`) or a URL to a custom CSL
-#' file. Only valid when `format = "bib"`, or when `format_includes` or
-#' `format_contents` contains `"bib"` or `"citation"`.
-#' @param linkwrap A boolean indicating whether URLs and DOIs should be
-#' returned as links. Only valid when `format = "bib"`, or when
-#' `format_includes` or `format_contents` contains `"bib"` or
-#' `"citation"`.
-#' @param locale A character string specifying the locale to use for
-#' bibliographic formatting (e.g., `"en-US"`). Only valid when `format =
-#' "bib"`, or when `format_includes` or `format_contents` contains
-#' `"bib"` or `"citation"`.
-#' @export
-zotero_params <- function(sort = NULL, direction = NULL,
-                          limit = NULL, start = NULL,
-                          # Search Parameters
-                          item_search = NULL, tag_search = NULL,
-                          # The following parameters affect the format of
-                          # data returned from read requests
-                          format = NULL,
-                          format_includes = NULL,
-                          format_contents = NULL,
-                          style = NULL, linkwrap = NULL, locale = NULL) {
-    assert_string(sort, allow_empty = FALSE, allow_null = TRUE)
-    if (!is.null(direction)) {
-        direction <- rlang::arg_match0(direction, c("asc", "desc"))
-    }
-    assert_number_whole(limit, min = 1, max = 100, allow_null = TRUE)
-    assert_number_whole(start, min = 0, allow_null = TRUE)
-    assert_s3_class(item_search, "zotero_search", allow_null = TRUE)
-    assert_s3_class(tag_search, "zotero_search", allow_null = TRUE)
-
-    # General Parameters
-    if (!is.null(format)) {
-        format <- rlang::arg_match0(format, c(
-            "atom", "bib", "json", "keys", "versions",
-            # Item Export Formats
-            # The following bibliographic data formats can be used as
-            # `format`, `include`, and `content` parameters for items
-            # requests:
-            "bibtex", "biblatex", "bookmarks", "coins",
-            "csljson", "csv", "mods", "refer", "rdf_bibliontology",
-            "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-        ))
-    }
-
-    # Parameters for "format=json"
-    if (!is.null(format_includes)) {
-        format_includes <- unique(as.character(format_includes))
-        format_includes <- rlang::arg_match0(format_includes, c(
-            "bib", "citation", "data",
-            # Item Export Formats
-            # The following bibliographic data formats can be used as
-            # `format`, `include`, and `content` parameters for items
-            # requests:
-            "bibtex", "biblatex", "bookmarks", "coins",
-            "csljson", "csv", "mods", "refer", "rdf_bibliontology",
-            "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-        ))
-    }
-
-    # Parameters for "format=atom"
-    if (!is.null(format_contents)) {
-        format_contents <- unique(as.character(format_contents))
-        format_contents <- rlang::arg_match0(format_contents, c(
-            "bib", "citation", "html", "json", "none",
-            # Item Export Formats
-            # The following bibliographic data formats can be used as
-            # `format`, `include`, and `content` parameters for items
-            # requests:
-            "bibtex", "biblatex", "bookmarks", "coins",
-            "csljson", "csv", "mods", "refer", "rdf_bibliontology",
-            "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-        ))
-    }
-    # Parameters for "format=bib", "include/content=bib",
-    # "include/content=citation": style, linkwrap, locale
-    assert_bool(style, allow_empty = FALSE, allow_null = TRUE)
-    assert_bool(linkwrap, allow_null = TRUE)
-    assert_bool(locale, allow_empty = FALSE, allow_null = TRUE)
-    structure(
-        list(
-            sort = sort, direction = direction,
-            limit = limit, start = start,
-            item_search = item_search, tag_search = tag_search,
-            format = format,
-            format_includes = format_includes,
-            format_contents = format_contents,
-            style = style, linkwrap = linkwrap, locale = locale
-        ),
-        class = "zotero_parameters"
-    )
-}
-
-#' @export
-merge.zotero_parameters <- function(x, y, ...) {
-    if (!is.null(x$item_search) && !is.null(y$item_search)) {
-        item_search <- merge(x$item_search, y$item_search, ...)
-    } else {
-        item_search <- y$item_search %||% x$item_search
-    }
-    x$item_search <- NULL
-    y$item_search <- NULL
-    if (!is.null(x$tag_search) && !is.null(y$tag_search)) {
-        tag_search <- merge(x$tag_search, y$tag_search, ...)
-    } else {
-        tag_search <- y$tag_search %||% x$tag_search
-    }
-    x$tag_search <- NULL
-    y$tag_search <- NULL
-    y <- y[!vapply(y, is.null, logical(1L), USE.NAMES = FALSE)]
-    x[names(y)] <- y
-    x["item_search"] <- list(item_search)
-    x["tag_search"] <- list(tag_search)
-    x
-}
-
-#' Searching Parameters for Zotero API
-#'
-#' @param quick A character string for a quick search. Use the `mode` parameter
-#' to change the search mode. Currently, only phrase searching is supported.
-#' @param mode A character string specifying the search mode:
-#' - For **items** endpoint, you can use one of the following:
-#'   - `"titleCreatorYear"`: Search by title, creator, and year.
-#'   - `"everything"`: Search across all fields for items.
-#' - For **tags** endpoint, you can use one of the following:
-#'   - `"contains"`: Tag search mode where the query string must be contained in
-#'     the tag.
-#'   - `"startsWith"`: Tag search mode where the query string must match the
-#'     beginning of the tag.
-#' @param include_tag A character vector specifying the tags. Supports Boolean
-#' searches (AND, OR, NOT). See the `Boolean Searches` section for details.
-#' @param include_items A character vector of item keys. Valid only for item
-#' requests. You can specify up to 50 item keys in a single request.
-#' @param include_item_type A character vector specifying item types. Supports
-#' Boolean searches (AND, OR, NOT). See the `Boolean Searches` section for
-#' details.
-#' @param since An integer representing a specific library version. Only items
-#' modified after the specified version (from a previous
-#' **Last-Modified-Version** header) will be returned.
-#' @section Boolean searches:
-#' - `include_item_type = "book"`
-#' - `include_item_type = "book || journalArticle"` (OR)
-#' - `include_item_type = "-attachment"` (NOT)
-#' - `include_tag = "foo"`
-#' - `include_tag = "foo bar"` (tag with space)
-#' - `include_tag = c("foo", "bar")`: Equivalent to`"tag=foo&tag=bar"` (AND)
-#' - `include_tag = "foo bar || bar"` (OR)
-#' - `include_tag = "-foo"` (NOT)
-#' - `include_tag = "\-foo"` (literal first-character hyphen)
-zotero_search <- function(quick = NULL, mode = NULL,
-                          include_tag = NULL,
-                          include_items = NULL,
-                          include_item_type = NULL,
-                          since = NULL) {
-    assert_string(quick, allow_empty = FALSE, allow_null = TRUE)
-    if (!is.null(include_tag)) {
-        include_tag <- as.character(include_tag)
-        if (anyNA(include_tag)) {
-            cli::cli_abort("{.arg include_tag} cannot contain missing value.")
-        }
-    }
-    if (!is.null(mode)) {
-        mode <- rlang::arg_match0(mode, c(
-            "titleCreatorYear", "everything",
-            "contains", "startsWith"
-        ))
-    }
-    if (!is.null(include_items)) include_items <- as.character(include_items)
-    if (!is.null(include_item_type)) {
-        include_item_type <- as.character(include_item_type)
-        if (anyNA(include_item_type)) {
-            cli::cli_abort("{.arg include_item_type} cannot contain missing value.")
-        }
-    }
-    assert_number_whole(since, min = 0, allow_null = TRUE)
-    structure(
-        list(
-            quick = quick, mode = mode,
-            include_tag = include_tag,
-            include_items = include_items,
-            include_item_type = include_item_type,
-            since = since
-        ),
-        class = "zotero_search"
-    )
-}
-
-#' @export
-merge.zotero_search <- function(x, y, ...) {
-    y <- y[!vapply(y, is.null, logical(1L), USE.NAMES = FALSE)]
-    x[names(y)] <- y
-    x
 }
 
 #' Perform the Zotero API Request

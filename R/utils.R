@@ -21,3 +21,8 @@ httr2_fun <- function(fn, mode = "any") from_namespace("httr2", fn, mode = mode)
 user_agent <- function(pkg = pkg_nm()) {
     sprintf("%s (%s)", pkg, utils::packageDescription(pkg)$URL)
 }
+
+modify_list <- function(old, new) {
+    for (i in names(new)) old[[i]] <- new[[i]]
+    old
+}

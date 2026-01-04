@@ -15,6 +15,7 @@ A full list of methods can be found here:
 \section{Methods}{
 \subsection{Public methods}{
 \itemize{
+\item \href{#method-Zotero-new}{\code{Zotero$new()}}
 \item \href{#method-Zotero-key_set}{\code{Zotero$key_set()}}
 \item \href{#method-Zotero-key_oauth}{\code{Zotero$key_oauth()}}
 \item \href{#method-Zotero-key_read}{\code{Zotero$key_read()}}
@@ -53,6 +54,16 @@ A full list of methods can be found here:
 \item \href{#method-Zotero-tags}{\code{Zotero$tags()}}
 \item \href{#method-Zotero-clone}{\code{Zotero$clone()}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Zotero-new"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-new}{}}}
+\subsection{Method \code{new()}}{
+Initialize a new Zotero instance
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$new()}\if{html}{\out{</div>}}
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_set"></a>}}
@@ -253,7 +264,7 @@ chaining.
 \if{html}{\out{<a id="method-Zotero-parameters"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-parameters}{}}}
 \subsection{Method \code{parameters()}}{
-Determine or Set the global searching parameters
+Determine or Set the global parameters
 \subsection{Usage}{
 \if{html}{\out{<div class="r">}}\preformatted{Zotero$parameters(...)}\if{html}{\out{</div>}}
 }
@@ -314,9 +325,17 @@ to send the API request.
 \subsection{Method \code{collections()}}{
 Collections in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collections()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collections(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collections_top"></a>}}
@@ -324,9 +343,17 @@ Collections in the library
 \subsection{Method \code{collections_top()}}{
 Top-level collections in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collections_top()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collections_top(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection"></a>}}
@@ -334,13 +361,16 @@ Top-level collections in the library
 \subsection{Method \code{collection()}}{
 A specific collection in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection(collection)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection(collection, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{collection}}{A specific collection in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -352,13 +382,16 @@ A specific collection in the library
 Subcollections within a specific collection in the
 library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_subgroups(collection)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_subgroups(collection, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{collection}}{A specific collection in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -370,13 +403,16 @@ library
 Tags associated with a specific collection in the
 library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_tags(collection)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_tags(collection, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{collection}}{A specific collection in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -387,13 +423,16 @@ library
 \subsection{Method \code{collection_items()}}{
 Items within a specific collection in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items(collection)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items(collection, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{collection}}{A specific collection in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -405,13 +444,16 @@ Items within a specific collection in the library
 Tags associated with the Items within a specific
 collection in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_tags(collection)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_tags(collection, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{collection}}{A specific collection in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -423,13 +465,16 @@ collection in the library
 Top-level items within a specific collection in the
 library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_top(collection)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_top(collection, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{collection}}{A specific collection in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -441,13 +486,16 @@ library
 Tags associated with the top-level items within a
 specific collection in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_top_tags(collection)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_top_tags(collection, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{collection}}{A specific collection in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -458,9 +506,17 @@ specific collection in the library
 \subsection{Method \code{items()}}{
 All items in the library, excluding trashed items
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$items(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_tags"></a>}}
@@ -469,9 +525,17 @@ All items in the library, excluding trashed items
 Tags associated all items in the library, excluding
 trashed items
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_tags()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_tags(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_top"></a>}}
@@ -479,9 +543,17 @@ trashed items
 \subsection{Method \code{items_top()}}{
 Top-level items in the library, excluding trashed items
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_top()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_top(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_top_tags"></a>}}
@@ -489,9 +561,17 @@ Top-level items in the library, excluding trashed items
 \subsection{Method \code{items_top_tags()}}{
 Tags associated with the top-level items in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_top_tags()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_top_tags(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_trash"></a>}}
@@ -499,9 +579,17 @@ Tags associated with the top-level items in the library
 \subsection{Method \code{items_trash()}}{
 Items in the trash
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_trash()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_trash(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_trash_tags"></a>}}
@@ -509,9 +597,17 @@ Items in the trash
 \subsection{Method \code{items_trash_tags()}}{
 Tags associated with the items in the trash
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_trash_tags()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_trash_tags(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-item"></a>}}
@@ -519,13 +615,16 @@ Tags associated with the items in the trash
 \subsection{Method \code{item()}}{
 A specific item in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item(item)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$item(item, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{item}}{A specific saved search in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -536,13 +635,16 @@ A specific item in the library
 \subsection{Method \code{item_tags()}}{
 Tags associated with a specific item in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_tags(item)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_tags(item, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{item}}{A specific saved search in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -553,13 +655,16 @@ Tags associated with a specific item in the library
 \subsection{Method \code{item_children()}}{
 Child items under a specific item
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_children(item)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_children(item, params = NULL)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
 \item{\code{item}}{A specific saved search in the library.}
+
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
 }
 \if{html}{\out{</div>}}
 }
@@ -570,9 +675,17 @@ Child items under a specific item
 \subsection{Method \code{publication_items()}}{
 Items in My Publications
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$publication_items()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$publication_items(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-publication_items_tags"></a>}}
@@ -580,9 +693,17 @@ Items in My Publications
 \subsection{Method \code{publication_items_tags()}}{
 Tags associated with the items in My Publications
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$publication_items_tags()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$publication_items_tags(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-saved_searches"></a>}}
@@ -625,9 +746,17 @@ Only get the saved searches, not search results.
 \subsection{Method \code{tags()}}{
 All tags in the library
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$tags()}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$tags(params = NULL)}\if{html}{\out{</div>}}
 }
 
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+}
+\if{html}{\out{</div>}}
+}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-clone"></a>}}
