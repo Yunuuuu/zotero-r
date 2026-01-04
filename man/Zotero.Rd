@@ -255,62 +255,19 @@ chaining.
 \subsection{Method \code{parameters()}}{
 Determine or Set the global searching parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$parameters(
-  sort = NULL,
-  direction = NULL,
-  limit = NULL,
-  start = NULL,
-  item_search = NULL,
-  tag_search = NULL,
-  format = NULL,
-  format_includes = NULL,
-  format_contents = NULL,
-  style = NULL,
-  linkwrap = NULL,
-  locale = NULL
-)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$parameters(...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
 \if{html}{\out{<div class="arguments">}}
 \describe{
-\item{\code{sort}}{The name of the field by which entries are sorted.}
-
-\item{\code{direction}}{The sorting direction of the field specified in the
-sort parameter. One of \code{"asc"} or \code{"desc"}.}
-
-\item{\code{limit}}{The maximum number of results to return with a single
-request. Required for export formats. An integer between 1-100.}
-
-\item{\code{start}}{The index of the first result. Combine with the \code{limit}
-parameter to select a slice of the available results.}
-
-\item{\code{item_search, tag_search}}{A \code{\link[=zotero_search]{zotero_search()}} object to
-refine the item/tag searching.}
-
-\item{\code{format}}{Format of the response.}
-
-\item{\code{format_includes}}{Formats to include in the response, multiple
-formats can be specified.}
-
-\item{\code{format_contents}}{The format of the Atom response's \if{html}{\out{<content>}}
-node, multiple formats can be specified.}
-
-\item{\code{style}}{Citation style for formatted references. You can provide
-either the name of a style (e.g., \code{"apa"}) or a URL to a custom CSL
-file. Only valid when \code{format = "bib"}, or when \code{format_includes} or
-\code{format_contents} contains \code{"bib"} or \code{"citation"}.}
-
-\item{\code{linkwrap}}{A boolean indicating whether URLs and DOIs should be
-returned as links. Only valid when \code{format = "bib"}, or when
-\code{format_includes} or \code{format_contents} contains \code{"bib"} or
-\code{"citation"}.}
-
-\item{\code{locale}}{A character string specifying the locale to use for
-bibliographic formatting (e.g., \code{"en-US"}). Only valid when \code{format = "bib"}, or when \code{format_includes} or \code{format_contents} contains
-\code{"bib"} or \code{"citation"}.}
+\item{\code{...}}{Additional arguments passed on to \code{\link[=zotero_params]{zotero_params()}}.}
 }
 \if{html}{\out{</div>}}
+}
+\subsection{Returns}{
+A \code{zotero_params} object when \code{...} is empty, otherwise,
+returns the Zotero instance itself, allowing for method chaining.
 }
 }
 \if{html}{\out{<hr>}}

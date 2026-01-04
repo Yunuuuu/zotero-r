@@ -297,114 +297,13 @@ Zotero <- R6::R6Class(
 
         #' @description Determine or Set the global searching parameters
         #'
-        #' @param sort The name of the field by which entries are sorted.
-        #' @param direction The sorting direction of the field specified in the
-        #' sort parameter. One of `"asc"` or `"desc"`.
-        #' @param limit The maximum number of results to return with a single
-        #' request. Required for export formats. An integer between 1-100.
-        #' @param start The index of the first result. Combine with the `limit`
-        #' parameter to select a slice of the available results.
-        #' @param item_search,tag_search A [`zotero_search()`] object to
-        #' refine the item/tag searching.
-        #' @param format Format of the response.
-        #' @param format_includes Formats to include in the response, multiple
-        #' formats can be specified.
-        #' @param format_contents The format of the Atom response's <content>
-        #' node, multiple formats can be specified.
-        #' @param style Citation style for formatted references. You can provide
-        #' either the name of a style (e.g., `"apa"`) or a URL to a custom CSL
-        #' file. Only valid when `format = "bib"`, or when `format_includes` or
-        #' `format_contents` contains `"bib"` or `"citation"`.
-        #' @param linkwrap A boolean indicating whether URLs and DOIs should be
-        #' returned as links. Only valid when `format = "bib"`, or when
-        #' `format_includes` or `format_contents` contains `"bib"` or
-        #' `"citation"`.
-        #' @param locale A character string specifying the locale to use for
-        #' bibliographic formatting (e.g., `"en-US"`). Only valid when `format =
-        #' "bib"`, or when `format_includes` or `format_contents` contains
-        #' `"bib"` or `"citation"`.
-        parameters = function(sort = NULL, direction = NULL,
-                              limit = NULL, start = NULL,
-                              # Search Parameters
-                              item_search = NULL, tag_search = NULL,
-                              # The following parameters affect the format of
-                              # data returned from read requests
-                              format = NULL,
-                              format_includes = NULL,
-                              format_contents = NULL,
-                              style = NULL, linkwrap = NULL, locale = NULL) {
-            assert_string(sort, allow_empty = FALSE, allow_null = TRUE)
-            if (!is.null(direction)) {
-                direction <- rlang::arg_match0(direction, c("asc", "desc"))
-            }
-            assert_number_whole(limit, min = 1, max = 100, allow_null = TRUE)
-            assert_number_whole(start, min = 0, allow_null = TRUE)
-            assert_s3_class(item_search, "zotero_search")
-            assert_s3_class(tag_search, "zotero_search")
-
-            # General Parameters
-            if (!is.null(format)) {
-                format <- rlang::arg_match0(format, c(
-                    "atom", "bib", "json", "keys", "versions",
-                    # Item Export Formats
-                    # The following bibliographic data formats can be used as
-                    # `format`, `include`, and `content` parameters for items
-                    # requests:
-                    "bibtex", "biblatex", "bookmarks", "coins",
-                    "csljson", "csv", "mods", "refer", "rdf_bibliontology",
-                    "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-                ))
-            }
-
-            # Parameters for "format=json"
-            if (!is.null(format_includes)) {
-                format_includes <- unique(as.character(format_includes))
-                format_includes <- rlang::arg_match0(format_includes, c(
-                    "bib", "citation", "data",
-                    # Item Export Formats
-                    # The following bibliographic data formats can be used as
-                    # `format`, `include`, and `content` parameters for items
-                    # requests:
-                    "bibtex", "biblatex", "bookmarks", "coins",
-                    "csljson", "csv", "mods", "refer", "rdf_bibliontology",
-                    "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-                ))
-            }
-
-            # Parameters for "format=atom"
-            if (!is.null(format_contents)) {
-                format_contents <- unique(as.character(format_contents))
-                format_contents <- rlang::arg_match0(format_contents, c(
-                    "bib", "citation", "html", "json", "none",
-                    # Item Export Formats
-                    # The following bibliographic data formats can be used as
-                    # `format`, `include`, and `content` parameters for items
-                    # requests:
-                    "bibtex", "biblatex", "bookmarks", "coins",
-                    "csljson", "csv", "mods", "refer", "rdf_bibliontology",
-                    "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-                ))
-            }
-            # Parameters for "format=bib", "include/content=bib",
-            # "include/content=citation": style, linkwrap, locale
-            assert_bool(style, allow_empty = FALSE, allow_null = TRUE)
-            assert_bool(linkwrap, allow_null = TRUE)
-            assert_bool(locale, allow_empty = FALSE, allow_null = TRUE)
-            params <- list(
-                sort = sort, direction = direction,
-                limit = limit, start = start,
-                item_search = item_search, tag_search = tag_search,
-                format = format,
-                format_includes = format_includes,
-                format_contents = format_contents,
-                style = style, linkwrap = linkwrap, locale = locale
-            )
-            if (is.null(private$params)) private$params <- params
-            params <- params[
-                !vapply(params, is.null, logical(1L), USE.NAMES = FALSE)
-            ]
-            if (length(params) == 0L) return(private$params) # styler: off
-            private$params[names(params)] <- params
+        #' @param ... Additional arguments passed on to [`zotero_params()`].
+        #' @return A `zotero_params` object when `...` is empty, otherwise,
+        #' returns the Zotero instance itself, allowing for method chaining.
+        parameters = function(...) {
+            if (...length() == 0L) return(private$params) # styler: off
+            params <- zotero_params(...)
+            private$params <- merge(private$params, params)
             invisible(self)
         },
 
@@ -754,6 +653,70 @@ Zotero <- R6::R6Class(
             private$backoff_setup(resp) # setup backoff for next request
             resp
         },
+        query = function(params = NULL, sorting = TRUE, search_item = TRUE,
+                         search_tag = TRUE) {
+            if (is.null(params)) {
+                params <- private$params
+            } else {
+                params <- merge(private$params, params)
+            }
+            query <- list()
+            query$format <- params$format %||% "json"
+            use_style <- query$format == "bib"
+            if (query$format == "json") {
+                if (is.null(params$format_includes)) {
+                    query$include <- "data"
+                } else {
+                    query$include <- paste(
+                        params$format_includes,
+                        collapse = ","
+                    )
+                    use_style <- use_style ||
+                        any(params$format_includes %in% c("bib", "citation"))
+                }
+            }
+            if (query$format == "atom") {
+                if (is.null(params$format_contents)) {
+                    query$content <- "html"
+                } else {
+                    query$content <- paste(
+                        params$format_contents,
+                        collapse = ","
+                    )
+                    use_style <- use_style ||
+                        any(params$format_contents %in% c("bib", "citation"))
+                }
+            }
+            if (use_style) {
+                query$style <- params$style %||% "chicago-note-bibliography"
+                query$linkwrap <- if (params$linkwrap %||% FALSE) {
+                    "1"
+                } else {
+                    "0"
+                }
+                query$locale <- params$locale %||% "en-US"
+            }
+
+            if (sorting) {
+                if (query$format == "atom") {
+                    query$sort <- "dateAdded"
+                } else {
+                    query$sort <- "dateModified"
+                }
+                query$direction <- params$direction # varies by sort
+                query$limit <- params$limit %||% 25L
+                query$start <- params$start %||% 0L
+            }
+            c(
+                "itemKey", "itemType", "q", "since", "tag",
+                "includeTrashed", "qmode",
+                "itemQ", "itemQMode", "itemTag"
+            )
+            params$item_search <- params$item_search %||%
+                zotero_search()
+            params$tag_search <- params$tag_search %||%
+                zotero_search()
+        },
         req_collection = function(collection, ..., call = caller_env()) {
             assert_string(collection, allow_empty = FALSE, call = call)
             self$request("collections", collection,
@@ -810,6 +773,139 @@ library_prefix <- function(request, library) {
 print.zotero_library <- function(x, ...) {
     cat("<", .subset2(x, "type"), ": ", .subset2(x, "id"), ">\n", sep = "")
     invisible(x)
+}
+
+#' Parameters for Zotero API
+#'
+#' @param sort The name of the field by which entries are sorted.
+#' @param direction The sorting direction of the field specified in the
+#' sort parameter. One of `"asc"` or `"desc"`.
+#' @param limit The maximum number of results to return with a single
+#' request. Required for export formats. An integer between 1-100.
+#' @param start The index of the first result. Combine with the `limit`
+#' parameter to select a slice of the available results.
+#' @param item_search,tag_search A [`zotero_search()`] object to
+#' refine the item/tag searching.
+#' @param format Format of the response.
+#' @param format_includes Formats to include in the response, multiple
+#' formats can be specified.
+#' @param format_contents The format of the Atom response's <content>
+#' node, multiple formats can be specified.
+#' @param style Citation style for formatted references. You can provide
+#' either the name of a style (e.g., `"apa"`) or a URL to a custom CSL
+#' file. Only valid when `format = "bib"`, or when `format_includes` or
+#' `format_contents` contains `"bib"` or `"citation"`.
+#' @param linkwrap A boolean indicating whether URLs and DOIs should be
+#' returned as links. Only valid when `format = "bib"`, or when
+#' `format_includes` or `format_contents` contains `"bib"` or
+#' `"citation"`.
+#' @param locale A character string specifying the locale to use for
+#' bibliographic formatting (e.g., `"en-US"`). Only valid when `format =
+#' "bib"`, or when `format_includes` or `format_contents` contains
+#' `"bib"` or `"citation"`.
+#' @export
+zotero_params <- function(sort = NULL, direction = NULL,
+                          limit = NULL, start = NULL,
+                          # Search Parameters
+                          item_search = NULL, tag_search = NULL,
+                          # The following parameters affect the format of
+                          # data returned from read requests
+                          format = NULL,
+                          format_includes = NULL,
+                          format_contents = NULL,
+                          style = NULL, linkwrap = NULL, locale = NULL) {
+    assert_string(sort, allow_empty = FALSE, allow_null = TRUE)
+    if (!is.null(direction)) {
+        direction <- rlang::arg_match0(direction, c("asc", "desc"))
+    }
+    assert_number_whole(limit, min = 1, max = 100, allow_null = TRUE)
+    assert_number_whole(start, min = 0, allow_null = TRUE)
+    assert_s3_class(item_search, "zotero_search", allow_null = TRUE)
+    assert_s3_class(tag_search, "zotero_search", allow_null = TRUE)
+
+    # General Parameters
+    if (!is.null(format)) {
+        format <- rlang::arg_match0(format, c(
+            "atom", "bib", "json", "keys", "versions",
+            # Item Export Formats
+            # The following bibliographic data formats can be used as
+            # `format`, `include`, and `content` parameters for items
+            # requests:
+            "bibtex", "biblatex", "bookmarks", "coins",
+            "csljson", "csv", "mods", "refer", "rdf_bibliontology",
+            "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
+        ))
+    }
+
+    # Parameters for "format=json"
+    if (!is.null(format_includes)) {
+        format_includes <- unique(as.character(format_includes))
+        format_includes <- rlang::arg_match0(format_includes, c(
+            "bib", "citation", "data",
+            # Item Export Formats
+            # The following bibliographic data formats can be used as
+            # `format`, `include`, and `content` parameters for items
+            # requests:
+            "bibtex", "biblatex", "bookmarks", "coins",
+            "csljson", "csv", "mods", "refer", "rdf_bibliontology",
+            "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
+        ))
+    }
+
+    # Parameters for "format=atom"
+    if (!is.null(format_contents)) {
+        format_contents <- unique(as.character(format_contents))
+        format_contents <- rlang::arg_match0(format_contents, c(
+            "bib", "citation", "html", "json", "none",
+            # Item Export Formats
+            # The following bibliographic data formats can be used as
+            # `format`, `include`, and `content` parameters for items
+            # requests:
+            "bibtex", "biblatex", "bookmarks", "coins",
+            "csljson", "csv", "mods", "refer", "rdf_bibliontology",
+            "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
+        ))
+    }
+    # Parameters for "format=bib", "include/content=bib",
+    # "include/content=citation": style, linkwrap, locale
+    assert_bool(style, allow_empty = FALSE, allow_null = TRUE)
+    assert_bool(linkwrap, allow_null = TRUE)
+    assert_bool(locale, allow_empty = FALSE, allow_null = TRUE)
+    structure(
+        list(
+            sort = sort, direction = direction,
+            limit = limit, start = start,
+            item_search = item_search, tag_search = tag_search,
+            format = format,
+            format_includes = format_includes,
+            format_contents = format_contents,
+            style = style, linkwrap = linkwrap, locale = locale
+        ),
+        class = "zotero_parameters"
+    )
+}
+
+#' @export
+merge.zotero_parameters <- function(x, y, ...) {
+    if (!is.null(x$item_search) && !is.null(y$item_search)) {
+        item_search <- merge(x$item_search, y$item_search, ...)
+    } else {
+        item_search <- y$item_search %||% x$item_search
+    }
+    x$item_search <- NULL
+    y$item_search <- NULL
+    if (!is.null(x$tag_search) && !is.null(y$tag_search)) {
+        tag_search <- merge(x$tag_search, y$tag_search, ...)
+    } else {
+        tag_search <- y$tag_search %||% x$tag_search
+    }
+    x$tag_search <- NULL
+    y$tag_search <- NULL
+    y <- y[!vapply(y, is.null, logical(1L), USE.NAMES = FALSE)]
+    x[names(y)] <- y
+    x["item_search"] <- list(item_search)
+    x["tag_search"] <- list(tag_search)
+    x
 }
 
 #' Searching Parameters for Zotero API
@@ -881,6 +977,13 @@ zotero_search <- function(quick = NULL, mode = NULL,
         ),
         class = "zotero_search"
     )
+}
+
+#' @export
+merge.zotero_search <- function(x, y, ...) {
+    y <- y[!vapply(y, is.null, logical(1L), USE.NAMES = FALSE)]
+    x[names(y)] <- y
+    x
 }
 
 #' Perform the Zotero API Request
