@@ -339,6 +339,8 @@ Zotero <- R6::R6Class(
             }
             assert_number_whole(limit, min = 1, max = 100, allow_null = TRUE)
             assert_number_whole(start, min = 0, allow_null = TRUE)
+            assert_s3_class(item_search, "zotero_search")
+            assert_s3_class(tag_search, "zotero_search")
 
             # General Parameters
             if (!is.null(format)) {
