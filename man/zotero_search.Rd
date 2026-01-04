@@ -7,9 +7,9 @@
 zotero_search(
   quick = NULL,
   mode = NULL,
-  include_tags = NULL,
+  include_tag = NULL,
   include_items = NULL,
-  include_item_types = NULL,
+  include_item_type = NULL,
   since = NULL
 )
 }
@@ -33,13 +33,13 @@ beginning of the tag.
 }
 }}
 
-\item{include_tags}{A character vector specifying the tags. Supports Boolean
+\item{include_tag}{A character vector specifying the tags. Supports Boolean
 searches (AND, OR, NOT). See the \verb{Boolean Searches} section for details.}
 
 \item{include_items}{A character vector of item keys. Valid only for item
 requests. You can specify up to 50 item keys in a single request.}
 
-\item{include_item_types}{A character vector specifying item types. Supports
+\item{include_item_type}{A character vector specifying item types. Supports
 Boolean searches (AND, OR, NOT). See the \verb{Boolean Searches} section for
 details.}
 
@@ -53,15 +53,15 @@ Searching Parameters for Zotero API
 \section{Boolean searches}{
 
 \itemize{
-\item \code{include_item_types = "book"}
-\item \code{include_item_types = "book || journalArticle"} (OR)
-\item \code{include_item_types = "-attachment"} (NOT)
-\item \code{include_tags = "foo"}
-\item \code{include_tags = "foo bar"} (tag with space)
-\item \code{include_tags = c("foo", "bar")}: Equivalent to\code{"tag=foo&tag=bar"} (AND)
-\item \code{include_tags = "foo bar || bar"} (OR)
-\item \code{include_tags = "-foo"} (NOT)
-\item \code{include_tags = "\\-foo"} (literal first-character hyphen)
+\item \code{include_item_type = "book"}
+\item \code{include_item_type = "book || journalArticle"} (OR)
+\item \code{include_item_type = "-attachment"} (NOT)
+\item \code{include_tag = "foo"}
+\item \code{include_tag = "foo bar"} (tag with space)
+\item \code{include_tag = c("foo", "bar")}: Equivalent to\code{"tag=foo&tag=bar"} (AND)
+\item \code{include_tag = "foo bar || bar"} (OR)
+\item \code{include_tag = "-foo"} (NOT)
+\item \code{include_tag = "\\-foo"} (literal first-character hyphen)
 }
 }
 

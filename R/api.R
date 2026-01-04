@@ -784,7 +784,7 @@ Zotero <- R6::R6Class(
 #' @return A `zotero_library` object.
 #' @export
 zotero_library <- function(library_id, library_type) {
-    if ((is.character(library_id) || is.numeric(library_id)) &&
+    if (!(is.character(library_id) || is.numeric(library_id)) ||
         (length(library_id) != 1L || is.na(library_id))) {
         cli::cli_abort("{.arg library_id} must be a single string")
     }
@@ -822,36 +822,36 @@ print.zotero_library <- function(x, ...) {
 #'     the tag.
 #'   - `"startsWith"`: Tag search mode where the query string must match the
 #'     beginning of the tag.
-#' @param include_tags A character vector specifying the tags. Supports Boolean
+#' @param include_tag A character vector specifying the tags. Supports Boolean
 #' searches (AND, OR, NOT). See the `Boolean Searches` section for details.
 #' @param include_items A character vector of item keys. Valid only for item
 #' requests. You can specify up to 50 item keys in a single request.
-#' @param include_item_types A character vector specifying item types. Supports
+#' @param include_item_type A character vector specifying item types. Supports
 #' Boolean searches (AND, OR, NOT). See the `Boolean Searches` section for
 #' details.
 #' @param since An integer representing a specific library version. Only items
 #' modified after the specified version (from a previous
 #' **Last-Modified-Version** header) will be returned.
 #' @section Boolean searches:
-#' - `include_item_types = "book"`
-#' - `include_item_types = "book || journalArticle"` (OR)
-#' - `include_item_types = "-attachment"` (NOT)
-#' - `include_tags = "foo"`
-#' - `include_tags = "foo bar"` (tag with space)
-#' - `include_tags = c("foo", "bar")`: Equivalent to`"tag=foo&tag=bar"` (AND)
-#' - `include_tags = "foo bar || bar"` (OR)
-#' - `include_tags = "-foo"` (NOT)
-#' - `include_tags = "\-foo"` (literal first-character hyphen)
+#' - `include_item_type = "book"`
+#' - `include_item_type = "book || journalArticle"` (OR)
+#' - `include_item_type = "-attachment"` (NOT)
+#' - `include_tag = "foo"`
+#' - `include_tag = "foo bar"` (tag with space)
+#' - `include_tag = c("foo", "bar")`: Equivalent to`"tag=foo&tag=bar"` (AND)
+#' - `include_tag = "foo bar || bar"` (OR)
+#' - `include_tag = "-foo"` (NOT)
+#' - `include_tag = "\-foo"` (literal first-character hyphen)
 zotero_search <- function(quick = NULL, mode = NULL,
-                          include_tags = NULL,
+                          include_tag = NULL,
                           include_items = NULL,
-                          include_item_types = NULL,
+                          include_item_type = NULL,
                           since = NULL) {
     assert_string(quick, allow_empty = FALSE, allow_null = TRUE)
-    if (!is.null(include_tags)) {
-        include_tags <- as.character(include_tags)
-        if (anyNA(include_tags)) {
-            cli::cli_abort("{.arg include_tags} cannot contain missing value.")
+    if (!is.null(include_tag)) {
+        include_tag <- as.character(include_tag)
+        if (anyNA(include_tag)) {
+            cli::cli_abort("{.arg include_tag} cannot contain missing value.")
         }
     }
     if (!is.null(mode)) {
@@ -861,19 +861,19 @@ zotero_search <- function(quick = NULL, mode = NULL,
         ))
     }
     if (!is.null(include_items)) include_items <- as.character(include_items)
-    if (!is.null(include_item_types)) {
-        include_item_types <- as.character(include_item_types)
-        if (anyNA(include_item_types)) {
-            cli::cli_abort("{.arg include_item_types} cannot contain missing value.")
+    if (!is.null(include_item_type)) {
+        include_item_type <- as.character(include_item_type)
+        if (anyNA(include_item_type)) {
+            cli::cli_abort("{.arg include_item_type} cannot contain missing value.")
         }
     }
     assert_number_whole(since, min = 0, allow_null = TRUE)
     structure(
         list(
             quick = quick, mode = mode,
-            include_tags = include_tags,
+            include_tag = include_tag,
             include_items = include_items,
-            include_item_types = include_item_types,
+            include_item_type = include_item_type,
             since = since
         ),
         class = "zotero_search"
