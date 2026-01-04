@@ -399,6 +399,7 @@ Zotero <- R6::R6Class(
                 format_contents = format_contents,
                 style = style, linkwrap = linkwrap, locale = locale
             )
+            if (is.null(private$params)) private$params <- params
             params <- params[
                 !vapply(params, is.null, logical(1L), USE.NAMES = FALSE)
             ]
