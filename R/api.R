@@ -667,7 +667,7 @@ Zotero <- R6::R6Class(
         },
     ),
     private = list(
-        api = "https://api.zotero.org",
+        host = "https://api.zotero.org",
         oauth_request = "https://www.zotero.org/oauth/request",
         oauth_access = "https://www.zotero.org/oauth/access",
         oauth_authorize = "https://www.zotero.org/oauth/authorize",
@@ -727,7 +727,7 @@ Zotero <- R6::R6Class(
         request = function(..., library = NULL, query = NULL, method = NULL) {
             # Maybe some requests don't need the api key? we don't requre
             # `api_key` here.
-            req <- httr2::request(private$api)
+            req <- httr2::request(private$host)
             if (!is.null(library)) req <- library_prefix(req, library)
             req <- httr2::req_url_path_append(req, ...)
             if (!is.null(query)) req <- httr2::req_url_query(req, !!!query)
