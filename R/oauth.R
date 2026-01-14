@@ -33,7 +33,7 @@ zotero_oauth_request <- function(client, request) {
     req <- httr2::request(request)
     req <- httr2::req_method(req, "POST")
     req <- httr2::req_headers(req, Authorization = oauth_header(oauth_params(
-        req$method, req$url,
+        httr2::req_get_method(req), httr2::req_get_url(req),
         key = httr2_fun("unobfuscate")(client$key()),
         secret = httr2_fun("unobfuscate")(client$secret()),
         redirect = client$redirect

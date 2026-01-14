@@ -12,7 +12,7 @@ Depends:
 Imports: 
     cli,
     httpuv,
-    httr2,
+    httr2 (>= 1.2.0),
     openssl,
     R6,
     rlang,
