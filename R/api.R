@@ -345,7 +345,18 @@ Zotero <- R6::R6Class(
         #'
         #'   Use [with_verbosity()][httr2::with_verbosity] to control the
         #'   verbosity of requests that you can't affect directly.
-        #' @inherit httr2::req_perform return
+        #' @returns
+        #'   * If the HTTP request succeeds, and the status code is ok (e.g.
+        #'     200), an HTTP [response][httr2::response].
+        #'
+        #'   * If the HTTP request succeeds, but the status code is an error
+        #'     (e.g a 404), an error with class `c("httr2_http_404",
+        #'     "httr2_http")`.  By default, all 400 and 500 status codes will be
+        #'     treated as an error, but you can customise this with
+        #'     [req_error()][httr2::req_error].
+        #'
+        #'   * If the HTTP request fails (e.g. the connection is dropped or the
+        #'     server doesn't exist), an error with class `"httr2_failure"`.
         perform = function(..., library = NULL, query = NULL, method = NULL,
                            path = NULL, verbosity = NULL) {
             req <- private$request(...,

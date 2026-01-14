@@ -5,12 +5,12 @@
 \title{Zotero instance}
 \value{
 \itemize{
-\item If the HTTP request succeeds, and the status code is ok (e.g. 200),
-an HTTP \link[httr2]{response}.
+\item If the HTTP request succeeds, and the status code is ok (e.g.
+200), an HTTP \link[httr2:response]{response}.
 \item If the HTTP request succeeds, but the status code is an error
-(e.g a 404), an error with class \code{c("httr2_http_404", "httr2_http")}.
-By default, all 400 and 500 status codes will be treated as an error,
-but you can customise this with \code{\link[httr2:req_error]{req_error()}}.
+(e.g a 404), an error with class \code{c("httr2_http_404", "httr2_http")}.  By default, all 400 and 500 status codes will be
+treated as an error, but you can customise this with
+\link[httr2:req_error]{req_error()}.
 \item If the HTTP request fails (e.g. the connection is dropped or the
 server doesn't exist), an error with class \code{"httr2_failure"}.
 }
