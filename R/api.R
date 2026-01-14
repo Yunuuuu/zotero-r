@@ -631,7 +631,42 @@ Zotero <- R6::R6Class(
                 library = self$library()
             )
             private$req_perform(req)
-        }
+        },
+
+        # Zotero Web API Item Type/Field Requests
+        item_types = function() {
+            req <- private$request("itemTypes", method = "GET")
+            private$req_perform(req)
+        },
+        item_fields = function(item_type = NULL) {
+            if (is.null(item_type)) {
+                req <- private$request("itemFields", method = "GET")
+            } else {
+                req <- private$request("itemTypeFields",
+                    query = list(itemType = item_type), method = "GET",
+                )
+            }
+            private$req_perform(req)
+        },
+        creator_types = function(item_type) {
+            req <- private$request("itemTypeCreatorTypes",
+                query = list(itemType = item_type), method = "GET"
+            )
+            private$req_perform(req)
+        },
+        creator_fields = function(item_type = NULL) {
+            req <- private$request("creatorFields",
+                query = list(itemType = item_type), method = "GET"
+            )
+            private$req_perform(req)
+        },
+        new_item = function(item_type) {
+            req <- private$request(
+                "items", "new",
+                query = list(itemType = item_type), method = "GET"
+            )
+            private$req_perform(req)
+        },
     ),
     private = list(
         api = "https://api.zotero.org",
