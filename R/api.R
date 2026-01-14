@@ -49,7 +49,9 @@ Zotero <- R6::R6Class(
                 cli::cli_abort("OAuth authorization requires an interactive session.")
             }
             key_data <- zotero_oauth_token(
-                private$request, private$authorize, private$access
+                private$oauth_request,
+                private$oauth_authorize,
+                private$oauth_access
             )
             private$reset()
             # we can use the `token secret` the same way we already used a
@@ -175,7 +177,7 @@ Zotero <- R6::R6Class(
         #' membership in.
         key_groups = function() {
             if (is.null(private$groups)) {
-                req <- self$request("users", self$key_userid(), "groups")
+                req <- private$request("users", self$key_userid(), "groups")
                 resp <- private$req_perform(req)
                 private$groups <- httr2::resp_body_json(resp)
             }
@@ -189,8 +191,7 @@ Zotero <- R6::R6Class(
         key_revoke = function() {
             # we need userid to remove the cached key
             private$ensure_key()
-            req <- self$request("keys", private$api_key)
-            req <- httr2::req_method(req, "DELETE")
+            req <- private$request("keys", private$api_key, method = "DELETE")
             req <- httr2::req_error(req, is_error = function(resp) FALSE)
             resp <- private$req_perform(req)
             status <- httr2::resp_status(resp)
@@ -310,85 +311,53 @@ Zotero <- R6::R6Class(
             invisible(self)
         },
 
-        #' @description Make a request to the Zotero API
+        #' @description Perform the Zotero API Request
         #' @details
-        #' This method constructs a request of the Zotero API. It allows you to
-        #' specify the URL path components and optional query parameters, and
-        #' includes support for prefixing library-specific paths (e.g.,
-        #' `/users/<userID>` or `/groups/<groupID>`) when interacting with data
-        #' from specific libraries.
+        #' This method constructs a request of the Zotero API and perform it. It
+        #' allows you to specify the URL path components and optional query
+        #' parameters, and includes support for prefixing library-specific paths
+        #' (e.g., `/users/<userID>` or `/groups/<groupID>`) when interacting
+        #' with data from specific libraries.
         #' @param ... Character strings representing the path components to
         #' append to the Zotero API base URL.
         #' @param library A [`zotero_library()`] object. If provided, the
         #' request URL will be prefixed with the relevant library path
-        #' (`/users/<userID>` or `/groups/<groupID>`), ensuring that the request
-        #' is scoped to a specific library.
+        #' (`/users/<userID>` or `/groups/<groupID>`).
         #' @param query Optional named list of query parameters to be added to
         #' the request URL.
-        #' @return A `httr2` [request][httr2::request] object that can be used
-        #' to send the API request.
-        request = function(..., library = NULL, query = NULL) {
-            # Maybe some requests don't need the api key? we don't requre
-            # `api_key` here.
-            req <- httr2::request(private$api)
-            if (!is.null(library)) req <- library_prefix(req, library)
-            req <- httr2::req_url_path_append(req, ...)
-            if (!is.null(query)) req <- httr2::req_url_query(req, !!!query)
-            req <- httr2::req_user_agent(req, user_agent())
-            req <- httr2::req_headers(req, "zotero-api-version" = "3")
-            if (!is.null(private$api_key)) {
-                req <- httr2::req_auth_bearer_token(req, private$api_key)
-            }
-
-            # Rate Limiting:
-            # https://www.zotero.org/support/dev/web_api/v3/basics#rate_limiting
-            #
-            # 1. Error handling for responses with backoff
-            #
-            # 2. If a client has made too many requests within a given time
-            # period or is making too many concurrent requests, the API may
-            # return `429` Too Many Requests, potentially with a `Retry-After`:
-            # <seconds> header. Clients receiving a `429` should wait at least
-            # the number of seconds indicated in the header before making
-            # further requests, or to perform an exponential backoff if
-            # `Retry-After` isn't provided. They should also reduce their
-            # overall request rate and/or concurrency to avoid repeatedly
-            # getting `429`s, which may result in stricter throttling or
-            # temporary blocks.
-            httr2::req_retry(req,
-                max_tries = 3L,
-                is_transient = function(resp) {
-                    httr2::resp_is_error(resp) &&
-                        # For Retry-After
-                        #
-                        # `Retry-After` can also be included with 503 Service
-                        # Unavailable responses when the server is undergoing
-                        # maintenance. But we won't retry it.
-                        (httr2::resp_status(resp) == 429L ||
-                            # For responses with backoff
-                            httr2::resp_header_exists(resp, "Backoff"))
-                },
-                after = function(resp) {
-                    backoff <- httr2::resp_header(resp, "Backoff")
-                    retry_backoff <- httr2::resp_header(resp, "Retry-After")
-                    if (!is.null(backoff) && !is.null(retry_backoff)) {
-                        backoff <- as.integer(backoff)
-                        retry_backoff <- as.integer(retry_backoff)
-                        max(backoff, retry_backoff)
-                    } else if (is.null(backoff) && is.null(retry_backoff)) {
-                        NA # Exponential Backoff
-                    } else if (is.null(backoff)) {
-                        as.integer(retry_backoff)
-                    } else {
-                        as.integer(backoff)
-                    }
-                }
+        #' @param method Custom HTTP method.
+        #' @param path Optionally, path to save body of the response. This is
+        #'   useful for large responses since it avoids storing the response in
+        #'   memory.
+        #' @param mock A mocking function. If supplied, this function is called
+        #'   with the request. It should return either `NULL` (if it doesn't
+        #'   want to handle the request) or a [response] (if it does). See
+        #'   [with_mocked_responses()][httr2::with_mocked_responses]/`local_mocked_responses()`
+        #'   for more details.
+        #' @param verbosity How much information to print? This is a wrapper
+        #'   around [req_verbose()][httr2::req_verbose] that uses an integer to
+        #'   control verbosity:
+        #'
+        #'   * `0`: no output
+        #'   * `1`: show headers
+        #'   * `2`: show headers and bodies
+        #'   * `3`: show headers, bodies, and curl status messages.
+        #'
+        #'   Use [with_verbosity()][httr2::with_verbosity] to control the
+        #'   verbosity of requests that you can't affect directly.
+        #' @inherit httr2::req_perform return
+        perform = function(..., library = NULL, query = NULL, method = NULL,
+                           path = NULL, verbosity = NULL) {
+            req <- private$request(...,
+                query = query, method = method,
+                library = library
             )
+            private$req_perform(req, path = path, verbosity = verbosity)
         },
 
         #' @description Collections in the library
         collections = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "collections",
                 query = private$query(params),
                 library = self$library()
@@ -398,7 +367,7 @@ Zotero <- R6::R6Class(
 
         #' @description Top-level collections in the library
         collections_top = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "collections", "top",
                 query = private$query(params),
                 library = self$library()
@@ -484,7 +453,7 @@ Zotero <- R6::R6Class(
 
         #' @description All items in the library, excluding trashed items
         items = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "items",
                 query = private$query(params, item_search_params = TRUE),
                 library = self$library()
@@ -495,7 +464,7 @@ Zotero <- R6::R6Class(
         #' @description Tags associated all items in the library, excluding
         #' trashed items
         items_tags = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "items", "tags",
                 query = private$query(
                     params,
@@ -509,7 +478,7 @@ Zotero <- R6::R6Class(
 
         #' @description Top-level items in the library, excluding trashed items
         items_top = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "items", "top",
                 query = private$query(params, item_search_params = TRUE),
                 library = self$library()
@@ -519,7 +488,7 @@ Zotero <- R6::R6Class(
 
         #' @description Tags associated with the top-level items in the library
         items_top_tags = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "items", "top", "tags",
                 query = private$query(
                     params,
@@ -533,7 +502,7 @@ Zotero <- R6::R6Class(
 
         #' @description Items in the trash
         items_trash = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "items", "trash",
                 query = private$query(
                     params,
@@ -547,7 +516,7 @@ Zotero <- R6::R6Class(
 
         #' @description Tags associated with the items in the trash
         items_trash_tags = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "items", "trash", "tags",
                 query = private$query(
                     params,
@@ -598,7 +567,7 @@ Zotero <- R6::R6Class(
 
         #' @description Items in My Publications
         publication_items = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "publications", "items",
                 query = private$query(
                     params,
@@ -611,7 +580,7 @@ Zotero <- R6::R6Class(
 
         #' @description Tags associated with the items in My Publications
         publication_items_tags = function(params = NULL) {
-            req <- self$request(
+            req <- private$request(
                 "publications", "items", "tags",
                 query = private$query(
                     params,
@@ -626,7 +595,7 @@ Zotero <- R6::R6Class(
         #' @description Get all saved searches in the library
         #' @details Only get the saved searches, not search results.
         saved_searches = function() {
-            req <- self$request("searches", library = self$library())
+            req <- private$request("searches", library = self$library())
             private$req_perform(req)
         },
 
@@ -634,7 +603,7 @@ Zotero <- R6::R6Class(
         #' @details Only get the saved searches, not search results.
         saved_search = function(search) {
             assert_string(search, allow_empty = FALSE)
-            req <- self$request(
+            req <- private$request(
                 "searches", search,
                 library = self$library()
             )
@@ -643,7 +612,7 @@ Zotero <- R6::R6Class(
 
         #' @description All tags in the library
         tags = function(params = NULL) {
-            req <- self$request("tags",
+            req <- private$request("tags",
                 query = private$query(
                     params,
                     tag_search_params = TRUE
@@ -687,7 +656,7 @@ Zotero <- R6::R6Class(
                 !is.null(private$access)
         },
         complete_key_info = function() {
-            req <- self$request("keys", private$api_key)
+            req <- private$request("keys", private$api_key)
             resp <- private$req_perform(req)
             data <- httr2::resp_body_json(resp)
             private$userid <- as.character(.subset2(data, "userID"))
@@ -710,6 +679,63 @@ Zotero <- R6::R6Class(
                     call = call
                 )
             }
+        },
+        request = function(..., library = NULL, query = NULL, method = NULL) {
+            # Maybe some requests don't need the api key? we don't requre
+            # `api_key` here.
+            req <- httr2::request(private$api)
+            if (!is.null(library)) req <- library_prefix(req, library)
+            req <- httr2::req_url_path_append(req, ...)
+            if (!is.null(query)) req <- httr2::req_url_query(req, !!!query)
+            req <- httr2::req_user_agent(req, user_agent())
+            req <- httr2::req_headers(req, "zotero-api-version" = "3")
+            if (!is.null(private$api_key)) {
+                req <- httr2::req_auth_bearer_token(req, private$api_key)
+            }
+            if (!is.null(method)) req <- httr2::req_method(req, method)
+
+            # Rate Limiting:
+            # https://www.zotero.org/support/dev/web_api/v3/basics#rate_limiting
+            #
+            # 1. Error handling for responses with `backoff`
+            #
+            # 2. If a client has made too many requests within a given time
+            # period or is making too many concurrent requests, the API may
+            # return `429` Too Many Requests, potentially with a `Retry-After`:
+            # <seconds> header. Clients receiving a `429` should wait at least
+            # the number of seconds indicated in the header before making
+            # further requests, or to perform an exponential backoff if
+            # `Retry-After` isn't provided. They should also reduce their
+            # overall request rate and/or concurrency to avoid repeatedly
+            # getting `429`s, which may result in stricter throttling or
+            # temporary blocks.
+            httr2::req_retry(req,
+                max_tries = 3L,
+                is_transient = function(resp) {
+                    httr2::resp_is_error(resp) &&
+                        # `Retry-After` can also be included with 503 Service
+                        # Unavailable responses when the server is undergoing
+                        # maintenance. But we won't retry it.
+                        (httr2::resp_status(resp) == 429L ||
+                            # For responses with backoff
+                            httr2::resp_header_exists(resp, "Backoff"))
+                },
+                after = function(resp) {
+                    backoff <- httr2::resp_header(resp, "Backoff")
+                    retry_backoff <- httr2::resp_header(resp, "Retry-After")
+                    if (!is.null(backoff) && !is.null(retry_backoff)) {
+                        backoff <- as.integer(backoff)
+                        retry_backoff <- as.integer(retry_backoff)
+                        max(backoff, retry_backoff)
+                    } else if (is.null(backoff) && is.null(retry_backoff)) {
+                        NA # Exponential Backoff
+                    } else if (is.null(backoff)) {
+                        as.integer(retry_backoff)
+                    } else {
+                        as.integer(backoff)
+                    }
+                }
+            )
         },
         backoff_setup = function(resp) {
             # If the API servers are overloaded, the API may include a
@@ -771,14 +797,14 @@ Zotero <- R6::R6Class(
         },
         req_collection = function(collection, ..., call = caller_env()) {
             assert_string(collection, allow_empty = FALSE, call = call)
-            self$request(
+            private$request(
                 "collections", collection, ...,
                 library = self$library()
             )
         },
         req_item = function(item, ..., call = caller_env()) {
             assert_string(item, allow_empty = FALSE, call = call)
-            self$request("items", item, ..., library = self$library())
+            private$request("items", item, ..., library = self$library())
         }
     )
 )
@@ -825,38 +851,4 @@ library_prefix <- function(request, library) {
 print.zotero_library <- function(x, ...) {
     cat("<", .subset2(x, "type"), ": ", .subset2(x, "id"), ">\n", sep = "")
     invisible(x)
-}
-
-#' Perform the Zotero API Request
-#'
-#' This function executes a Zotero API request created by [`Zotero`]. It uses
-#' method dispatch to handle different types of request execution based on the
-#' input. If a single request is provided, it performs the request. If a list of
-#' requests is provided, it performs the requests in parallel.
-#'
-#' @param req A httr2 [request][httr2::request] or a list of
-#'   [request][httr2::request] objects created by [`Zotero`].
-#' @param ... Additional arguments passed to method dispatch.
-#'  - When `req` is a single request, these arguments are passed to
-#'    [`httr2::req_perform()`].
-#'  - When `req` is a list of requests, these arguments are passed to
-#'    [`httr2::req_perform_parallel()`].
-#' @param key Optional authenticated key for the request.
-#'
-#' @return The response from the Zotero API.
-#' @export
-zotero_perform <- function(req, ..., key = NULL) UseMethod("zotero_perform")
-
-#' @export
-zotero_perform.httr2_request <- function(req, ..., key = NULL) {
-    if (!is.null(key)) {
-        req <- httr2::req_auth_bearer_token(req, token = key)
-    }
-    httr2::req_perform(req, ...)
-}
-
-#' @export
-zotero_perform.list <- function(req, ..., key = NULL) {
-    req <- lapply(req, zotero_perform, ..., key = key)
-    httr2::req_perform_parallel(req, ...)
 }

@@ -3,6 +3,18 @@
 \name{Zotero}
 \alias{Zotero}
 \title{Zotero instance}
+\value{
+\itemize{
+\item If the HTTP request succeeds, and the status code is ok (e.g. 200),
+an HTTP \link[httr2]{response}.
+\item If the HTTP request succeeds, but the status code is an error
+(e.g a 404), an error with class \code{c("httr2_http_404", "httr2_http")}.
+By default, all 400 and 500 status codes will be treated as an error,
+but you can customise this with \code{\link[httr2:req_error]{req_error()}}.
+\item If the HTTP request fails (e.g. the connection is dropped or the
+server doesn't exist), an error with class \code{"httr2_failure"}.
+}
+}
 \description{
 Zotero instance
 
@@ -28,7 +40,7 @@ A full list of methods can be found here:
 \item \href{#method-Zotero-key_revoke}{\code{Zotero$key_revoke()}}
 \item \href{#method-Zotero-library}{\code{Zotero$library()}}
 \item \href{#method-Zotero-parameters}{\code{Zotero$parameters()}}
-\item \href{#method-Zotero-request}{\code{Zotero$request()}}
+\item \href{#method-Zotero-perform}{\code{Zotero$perform()}}
 \item \href{#method-Zotero-collections}{\code{Zotero$collections()}}
 \item \href{#method-Zotero-collections_top}{\code{Zotero$collections_top()}}
 \item \href{#method-Zotero-collection}{\code{Zotero$collection()}}
@@ -282,12 +294,19 @@ returns the Zotero instance itself, allowing for method chaining.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Zotero-request"></a>}}
-\if{latex}{\out{\hypertarget{method-Zotero-request}{}}}
-\subsection{Method \code{request()}}{
-Make a request to the Zotero API
+\if{html}{\out{<a id="method-Zotero-perform"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-perform}{}}}
+\subsection{Method \code{perform()}}{
+Perform the Zotero API Request
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$request(..., library = NULL, query = NULL)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$perform(
+  ...,
+  library = NULL,
+  query = NULL,
+  method = NULL,
+  path = NULL,
+  verbosity = NULL
+)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -298,26 +317,46 @@ append to the Zotero API base URL.}
 
 \item{\code{library}}{A \code{\link[=zotero_library]{zotero_library()}} object. If provided, the
 request URL will be prefixed with the relevant library path
-(\verb{/users/<userID>} or \verb{/groups/<groupID>}), ensuring that the request
-is scoped to a specific library.}
+(\verb{/users/<userID>} or \verb{/groups/<groupID>}).}
 
 \item{\code{query}}{Optional named list of query parameters to be added to
 the request URL.}
+
+\item{\code{method}}{Custom HTTP method.}
+
+\item{\code{path}}{Optionally, path to save body of the response. This is
+useful for large responses since it avoids storing the response in
+memory.}
+
+\item{\code{verbosity}}{How much information to print? This is a wrapper
+around \link[httr2:req_verbose]{req_verbose()} that uses an integer to
+control verbosity:
+\itemize{
+\item \code{0}: no output
+\item \code{1}: show headers
+\item \code{2}: show headers and bodies
+\item \code{3}: show headers, bodies, and curl status messages.
+}
+
+Use \link[httr2:with_verbosity]{with_verbosity()} to control the
+verbosity of requests that you can't affect directly.}
+
+\item{\code{mock}}{A mocking function. If supplied, this function is called
+with the request. It should return either \code{NULL} (if it doesn't
+want to handle the request) or a \link{response} (if it does). See
+\link[httr2:with_mocked_responses]{with_mocked_responses()}/\code{local_mocked_responses()}
+for more details.}
 }
 \if{html}{\out{</div>}}
 }
 \subsection{Details}{
-This method constructs a request of the Zotero API. It allows you to
-specify the URL path components and optional query parameters, and
-includes support for prefixing library-specific paths (e.g.,
-\verb{/users/<userID>} or \verb{/groups/<groupID>}) when interacting with data
-from specific libraries.
+This method constructs a request of the Zotero API and perform it. It
+allows you to specify the URL path components and optional query
+parameters, and includes support for prefixing library-specific paths
+(e.g., \verb{/users/<userID>} or \verb{/groups/<groupID>}) when interacting
+with data from specific libraries.
 }
 
-\subsection{Returns}{
-A \code{httr2} \link[httr2:request]{request} object that can be used
-to send the API request.
-}
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collections"></a>}}
