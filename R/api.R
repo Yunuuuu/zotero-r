@@ -654,10 +654,8 @@ Zotero <- R6::R6Class(
             )
             private$req_perform(req)
         },
-        creator_fields = function(item_type = NULL) {
-            req <- private$request("creatorFields",
-                query = list(itemType = item_type), method = "GET"
-            )
+        creator_fields = function() {
+            req <- private$request("creatorFields", method = "GET")
             private$req_perform(req)
         },
         new_item = function(item_type) {
