@@ -790,6 +790,48 @@ Zotero <- R6::R6Class(
                 }
             )
         },
+        req_perform = function(req, ..., cache = NULL) {
+            private$backoff_wait() # Wait for backoff of last request
+            if (isFALSE(cache) ||
+                cachem::is.key_missing(cache <- req_cache_get(req))) {
+                resp <- httr2::req_perform(req, ...)
+                if (httr2::resp_status(resp) == 200L) resp_cache_set(resp)
+            } else {
+                version <- httr2::resp_header(cache, "Last-Modified-Version")
+                req <- httr2::req_headers(req,
+                    "If-Modified-Since-Version" = version
+                )
+                resp <- httr2::req_perform(req, ...)
+                if (httr2::resp_status(resp) == 304L) {
+                    cli::cli_inform("Using the cached response")
+                    resp <- cache
+                } else if (httr2::resp_status(resp) == 200L) {
+                    resp_cache_set(resp)
+                }
+            }
+            private$backoff_setup(resp) # setup backoff for next request
+            resp
+        },
+        backoff_wait = function() {
+            if (!is.null(private$backoff_startup)) {
+                total <- private$backoff_reminder()
+                if (total > 0L) {
+                    cli::cli_progress_bar(
+                        "Throttling backoff",
+                        total = total, clear = TRUE
+                    )
+                    while (TRUE) {
+                        reminder <- private$backoff_reminder()
+                        if (reminder > 0L) {
+                            cli::cli_progress_update(set = total - reminder)
+                        }
+                        break
+                    }
+                    cli::cli_progress_done()
+                }
+                private$backoff_reset()
+            }
+        },
         backoff_setup = function(resp) {
             # If the API servers are overloaded, the API may include a
             # `Backoff`: <seconds> HTTP header in responses, indicating that the
@@ -813,48 +855,6 @@ Zotero <- R6::R6Class(
             reminder <- private$backoff_duration -
                 as.integer(Sys.time() - private$backoff_startup)
             max(reminder, 0L)
-        },
-        backoff_wait = function() {
-            if (!is.null(private$backoff_startup)) {
-                total <- private$backoff_reminder()
-                if (total > 0L) {
-                    cli::cli_progress_bar(
-                        "Throttling backoff",
-                        total = total, clear = TRUE
-                    )
-                    while (TRUE) {
-                        reminder <- private$backoff_reminder()
-                        if (reminder > 0L) {
-                            cli::cli_progress_update(set = total - reminder)
-                        }
-                        break
-                    }
-                    cli::cli_progress_done()
-                }
-                private$backoff_reset()
-            }
-        },
-        req_perform = function(req, ..., cache = NULL) {
-            private$backoff_wait() # Wait for backoff of last request
-            if (isFALSE(cache) ||
-                cachem::is.key_missing(cache <- req_cache_get(req))) {
-                resp <- httr2::req_perform(req, ...)
-                if (httr2::resp_status(resp) == 200L) resp_cache_set(resp)
-            } else {
-                version <- httr2::resp_header(cache, "Last-Modified-Version")
-                req <- httr2::req_headers(req,
-                    "If-Modified-Since-Version" = version
-                )
-                resp <- httr2::req_perform(req, ...)
-                if (httr2::resp_status(resp) == 304L) {
-                    cli::cli_inform("Using the cached response")
-                    resp <- cache
-                } else if (httr2::resp_status(resp) == 200L) {
-                    resp_cache_set(resp)
-                }
-            }
-            private$backoff_setup(resp) # setup backoff for next request
-            resp
         },
         query = function(params = NULL, ...) {
             if (is.null(params)) {
