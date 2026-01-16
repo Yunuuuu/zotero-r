@@ -77,14 +77,7 @@ Zotero <- R6::R6Class(
         #'   visit <https://www.zotero.org/settings/keys>.
         key_read = function(userid = NULL) {
             assert_string(userid, allow_empty = FALSE, allow_null = TRUE)
-            path <- credential_get(userid)
-            cli::cli_inform(c(
-                ">" = sprintf("Reading key from {.path %s}", path)
-            ))
-            key_data <- httr2::secret_read_rds(
-                path,
-                I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
-            )
+            key_data <- credential_get(userid)
             private$reset()
             private$api_key <- .subset2(key_data, "api_key")
             private$userid <- .subset2(key_data, "userid")
@@ -115,18 +108,16 @@ Zotero <- R6::R6Class(
                     # access = private$access,
                     # groups = private$groups
                 ),
-                credential_path(private$userid),
+                credential_key_path(private$userid),
                 I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
             )
             private$key_cached <- TRUE
 
             # Save the user ID of the credential key for future reference
-            credential_userids_file <- credential_userids_path()
-            if (file.exists(credential_userids_file)) {
-                credential_userids <- readRDS(credential_userids_file)
-            } else {
-                credential_userids <- NULL
-            }
+            credential_userids <- tryCatch(
+                readRDS(credential_userids_path()),
+                error = function(cnd) NULL
+            )
             credential_userids <- unique(c(private$userid, credential_userids))
             saveRDS(credential_userids, credential_userids_file)
             invisible(self)
@@ -202,7 +193,7 @@ Zotero <- R6::R6Class(
                 (!httr2::resp_is_error(resp) || status == 403L)) {
                 userid <- self$key_userid()
                 # remove the credential file
-                credential_file <- credential_path(userid)
+                credential_file <- credential_key_path(userid)
                 if (file.exists(credential_file) &&
                     unlink(credential_file, force = TRUE)) {
                     cli::cli_warn(sprintf(
@@ -664,7 +655,7 @@ Zotero <- R6::R6Class(
                 query = list(itemType = item_type), method = "GET"
             )
             private$req_perform(req)
-        },
+        }
     ),
     private = list(
         host = "https://api.zotero.org",
@@ -826,6 +817,7 @@ Zotero <- R6::R6Class(
             }
         },
         req_perform = function(req, ...) {
+
             private$backoff_wait() # Wait for backoff of last request
             resp <- httr2::req_perform(req, ...)
             private$backoff_setup(resp) # setup backoff for next request

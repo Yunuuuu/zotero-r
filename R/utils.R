@@ -1,12 +1,13 @@
-pkg_dir <- function(which) {
-    dir_create(tools::R_user_dir(pkg_nm(), which), recursive = TRUE)
+pkg_dir <- function(which, ...) {
+    dir <- file.path(tools::R_user_dir(pkg_nm(), which), ..., fsep = "/")
+    dir_create(dir, recursive = TRUE)
 }
 
-data_dir <- function() pkg_dir("data")
+data_dir <- function(...) pkg_dir("data", ...)
 
-cache_dir <- function() pkg_dir("cache")
+cache_dir <- function(...) pkg_dir("cache", ...)
 
-config_dir <- function() pkg_dir("config")
+config_dir <- function(...) pkg_dir("config", ...)
 
 dir_create <- function(path, ...) {
     if (!dir.exists(path) &&
