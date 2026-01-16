@@ -349,12 +349,6 @@ control verbosity:
 
 Use \link[httr2:with_verbosity]{with_verbosity()} to control the
 verbosity of requests that you can't affect directly.}
-
-\item{\code{mock}}{A mocking function. If supplied, this function is called
-with the request. It should return either \code{NULL} (if it doesn't
-want to handle the request) or a \link{response} (if it does). See
-\link[httr2:with_mocked_responses]{with_mocked_responses()}/\code{local_mocked_responses()}
-for more details.}
 }
 \if{html}{\out{</div>}}
 }
