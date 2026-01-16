@@ -5,5 +5,3 @@
 #' @importFrom R6 is.R6 is.R6Class
 ## usethis namespace: end
 NULL
-
-the <- new.env(parent = emptyenv())

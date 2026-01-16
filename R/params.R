@@ -38,7 +38,7 @@ zotero_params <- function(pagination = NULL, filter = NULL,
             error_arg = "tag_search$mode"
         )
     }
-    assert_s3_class(format, "param_search", allow_null = TRUE)
+    assert_s3_class(format, "param_format", allow_null = TRUE)
     structure(
         list(
             format = format, pagination = pagination,

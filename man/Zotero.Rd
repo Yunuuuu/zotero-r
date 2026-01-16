@@ -39,7 +39,7 @@ A full list of methods can be found here:
 \item \href{#method-Zotero-key_groups}{\code{Zotero$key_groups()}}
 \item \href{#method-Zotero-key_revoke}{\code{Zotero$key_revoke()}}
 \item \href{#method-Zotero-library}{\code{Zotero$library()}}
-\item \href{#method-Zotero-parameters}{\code{Zotero$parameters()}}
+\item \href{#method-Zotero-params}{\code{Zotero$params()}}
 \item \href{#method-Zotero-perform}{\code{Zotero$perform()}}
 \item \href{#method-Zotero-collections}{\code{Zotero$collections()}}
 \item \href{#method-Zotero-collections_top}{\code{Zotero$collections_top()}}
@@ -64,6 +64,11 @@ A full list of methods can be found here:
 \item \href{#method-Zotero-saved_searches}{\code{Zotero$saved_searches()}}
 \item \href{#method-Zotero-saved_search}{\code{Zotero$saved_search()}}
 \item \href{#method-Zotero-tags}{\code{Zotero$tags()}}
+\item \href{#method-Zotero-item_types}{\code{Zotero$item_types()}}
+\item \href{#method-Zotero-item_fields}{\code{Zotero$item_fields()}}
+\item \href{#method-Zotero-creator_types}{\code{Zotero$creator_types()}}
+\item \href{#method-Zotero-creator_fields}{\code{Zotero$creator_fields()}}
+\item \href{#method-Zotero-new_item}{\code{Zotero$new_item()}}
 \item \href{#method-Zotero-clone}{\code{Zotero$clone()}}
 }
 }
@@ -273,12 +278,12 @@ chaining.
 }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Zotero-parameters"></a>}}
-\if{latex}{\out{\hypertarget{method-Zotero-parameters}{}}}
-\subsection{Method \code{parameters()}}{
+\if{html}{\out{<a id="method-Zotero-params"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-params}{}}}
+\subsection{Method \code{params()}}{
 Determine or Set the global parameters
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$parameters(...)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$params(...)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{
@@ -304,6 +309,7 @@ Perform the Zotero API Request
   library = NULL,
   query = NULL,
   method = NULL,
+  cache = NULL,
   path = NULL,
   verbosity = NULL
 )}\if{html}{\out{</div>}}
@@ -323,6 +329,9 @@ request URL will be prefixed with the relevant library path
 the request URL.}
 
 \item{\code{method}}{Custom HTTP method.}
+
+\item{\code{cache}}{A logical value indicates whether we should try to use
+conditional request for caching.}
 
 \item{\code{path}}{Optionally, path to save body of the response. This is
 useful for large responses since it avoids storing the response in
@@ -793,6 +802,78 @@ All tags in the library
 \describe{
 \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Zotero-item_types"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-item_types}{}}}
+\subsection{Method \code{item_types()}}{
+Getting All Item Types
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_types()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Zotero-item_fields"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-item_fields}{}}}
+\subsection{Method \code{item_fields()}}{
+Getting All Item Fields or All Valid Fields for an Item
+Type
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_fields(item_type = NULL)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{item_type}}{A specific item type in the library.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Zotero-creator_types"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-creator_types}{}}}
+\subsection{Method \code{creator_types()}}{
+Getting Valid Creator Types for an Item Type
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$creator_types(item_type)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{item_type}}{A specific item type in the library.}
+}
+\if{html}{\out{</div>}}
+}
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Zotero-creator_fields"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-creator_fields}{}}}
+\subsection{Method \code{creator_fields()}}{
+Getting Localized Creator Fields
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$creator_fields()}\if{html}{\out{</div>}}
+}
+
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Zotero-new_item"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-new_item}{}}}
+\subsection{Method \code{new_item()}}{
+Getting a Template for a New Item
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$new_item(item_type)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{item_type}}{A specific item type in the library.}
 }
 \if{html}{\out{</div>}}
 }

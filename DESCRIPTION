@@ -16,6 +16,7 @@ Imports:
     openssl,
     R6,
     rlang,
+    cachem,
     utils
 ByteCompile: true
 Encoding: UTF-8

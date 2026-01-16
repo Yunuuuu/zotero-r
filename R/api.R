@@ -5,6 +5,7 @@
 #' @param collection A specific collection in the library.
 #' @param item A specific saved search in the library.
 #' @param search A specific saved search in the library.
+#' @param item_type A specific item type in the library.
 #' @param params A [`zotero_params()`] object defined the parameters used to
 #' create the request.
 #' @seealso
@@ -15,7 +16,7 @@ Zotero <- R6::R6Class(
     "Zotero",
     public = list(
         #' @description Initialize a new Zotero instance
-        initialize = function() private$params <- zotero_params(),
+        initialize = function() private$parameters <- zotero_params(),
         #' @description Set Zotero API key directly
         #' @param key A character string representing the Zotero API key. You
         #'   can create your private API key by visiting
@@ -169,7 +170,7 @@ Zotero <- R6::R6Class(
         key_groups = function() {
             if (is.null(private$groups)) {
                 req <- private$request("users", self$key_userid(), "groups")
-                resp <- private$req_perform(req)
+                resp <- private$req_perform(req, cache = FALSE)
                 private$groups <- httr2::resp_body_json(resp)
             }
             private$groups
@@ -184,7 +185,7 @@ Zotero <- R6::R6Class(
             private$ensure_key()
             req <- private$request("keys", private$api_key, method = "DELETE")
             req <- httr2::req_error(req, is_error = function(resp) FALSE)
-            resp <- private$req_perform(req)
+            resp <- private$req_perform(req, cache = FALSE)
             status <- httr2::resp_status(resp)
 
             # Authentication errors (e.g., invalid API key or insufficient
@@ -295,10 +296,10 @@ Zotero <- R6::R6Class(
         #' @param ... Additional arguments passed on to [`zotero_params()`].
         #' @return A `zotero_params` object when `...` is empty, otherwise,
         #' returns the Zotero instance itself, allowing for method chaining.
-        parameters = function(...) {
-            if (...length() == 0L) return(private$params) # styler: off
+        params = function(...) {
+            if (...length() == 0L) return(private$parameters) # styler: off
             params <- zotero_params(...)
-            private$params <- merge(private$params, params)
+            private$parameters <- merge(private$parameters, params)
             invisible(self)
         },
 
@@ -317,6 +318,8 @@ Zotero <- R6::R6Class(
         #' @param query Optional named list of query parameters to be added to
         #' the request URL.
         #' @param method Custom HTTP method.
+        #' @param cache A logical value indicates whether we should try to use
+        #' conditional request for caching.
         #' @param path Optionally, path to save body of the response. This is
         #'   useful for large responses since it avoids storing the response in
         #'   memory.
@@ -349,12 +352,14 @@ Zotero <- R6::R6Class(
         #'   * If the HTTP request fails (e.g. the connection is dropped or the
         #'     server doesn't exist), an error with class `"httr2_failure"`.
         perform = function(..., library = NULL, query = NULL, method = NULL,
-                           path = NULL, verbosity = NULL) {
+                           cache = NULL, path = NULL, verbosity = NULL) {
             req <- private$request(...,
                 query = query, method = method,
                 library = library
             )
-            private$req_perform(req, path = path, verbosity = verbosity)
+            private$req_perform(req,
+                cache = cache, path = path, verbosity = verbosity
+            )
         },
 
         #' @description Collections in the library
@@ -625,10 +630,14 @@ Zotero <- R6::R6Class(
         },
 
         # Zotero Web API Item Type/Field Requests
+        #' @description Getting All Item Types
         item_types = function() {
             req <- private$request("itemTypes", method = "GET")
             private$req_perform(req)
         },
+
+        #' @description Getting All Item Fields or All Valid Fields for an Item
+        #' Type
         item_fields = function(item_type = NULL) {
             if (is.null(item_type)) {
                 req <- private$request("itemFields", method = "GET")
@@ -639,16 +648,22 @@ Zotero <- R6::R6Class(
             }
             private$req_perform(req)
         },
+
+        #' @description Getting Valid Creator Types for an Item Type
         creator_types = function(item_type) {
             req <- private$request("itemTypeCreatorTypes",
                 query = list(itemType = item_type), method = "GET"
             )
             private$req_perform(req)
         },
+
+        #' @description Getting Localized Creator Fields
         creator_fields = function() {
             req <- private$request("creatorFields", method = "GET")
             private$req_perform(req)
         },
+
+        #' @description Getting a Template for a New Item
         new_item = function(item_type) {
             req <- private$request(
                 "items", "new",
@@ -672,7 +687,7 @@ Zotero <- R6::R6Class(
         key_cached = NULL,
         backoff_startup = NULL,
         backoff_duration = NULL,
-        params = NULL,
+        parameters = NULL,
         reset = function() {
             private$zlibrary <- NULL
             private$api_key <- NULL
@@ -692,7 +707,7 @@ Zotero <- R6::R6Class(
         },
         complete_key_info = function() {
             req <- private$request("keys", private$api_key)
-            resp <- private$req_perform(req)
+            resp <- private$req_perform(req, cache = FALSE)
             data <- httr2::resp_body_json(resp)
             private$userid <- as.character(.subset2(data, "userID"))
             private$username <- as.character(.subset2(data, "username"))
@@ -719,10 +734,17 @@ Zotero <- R6::R6Class(
             # Maybe some requests don't need the api key? we don't requre
             # `api_key` here.
             req <- httr2::request(private$host)
+            req <- httr2::req_user_agent(req, user_agent())
             if (!is.null(library)) req <- library_prefix(req, library)
             req <- httr2::req_url_path_append(req, ...)
-            if (!is.null(query)) req <- httr2::req_url_query(req, !!!query)
-            req <- httr2::req_user_agent(req, user_agent())
+            if (!is.null(query)) {
+                req <- httr2::req_url_query(req, !!!query)
+                if (rlang::is_string(query$format, "atom")) {
+                    req <- httr2::req_headers(req,
+                        Accept = "application/atom+xml"
+                    )
+                }
+            }
             req <- httr2::req_headers(req, "zotero-api-version" = "3")
             if (!is.null(private$api_key)) {
                 req <- httr2::req_auth_bearer_token(req, private$api_key)
@@ -732,7 +754,8 @@ Zotero <- R6::R6Class(
             # Rate Limiting:
             # https://www.zotero.org/support/dev/web_api/v3/basics#rate_limiting
             #
-            # 1. Error handling for responses with `backoff`
+            # 1. Error handling for responses with `backoff`, `Backoff` can be
+            #    included in any response, including successful ones.
             #
             # 2. If a client has made too many requests within a given time
             # period or is making too many concurrent requests, the API may
@@ -816,18 +839,33 @@ Zotero <- R6::R6Class(
                 private$backoff_reset()
             }
         },
-        req_perform = function(req, ...) {
-
+        req_perform = function(req, ..., cache = NULL) {
             private$backoff_wait() # Wait for backoff of last request
-            resp <- httr2::req_perform(req, ...)
+            if (isFALSE(cache) ||
+                cachem::is.key_missing(cache <- req_cache_get(req))) {
+                resp <- httr2::req_perform(req, ...)
+                if (httr2::resp_status(resp) == 200L) resp_cache_set(resp)
+            } else {
+                version <- httr2::resp_header(cache, "Last-Modified-Version")
+                req <- httr2::req_headers(req,
+                    "If-Modified-Since-Version" = version
+                )
+                resp <- httr2::req_perform(req, ...)
+                if (httr2::resp_status(resp) == 304L) {
+                    cli::cli_inform("Using the cached response")
+                    resp <- cache
+                } else if (httr2::resp_status(resp) == 200L) {
+                    resp_cache_set(resp)
+                }
+            }
             private$backoff_setup(resp) # setup backoff for next request
             resp
         },
         query = function(params = NULL, ...) {
             if (is.null(params)) {
-                params <- private$params
+                params <- private$parameters
             } else {
-                params <- merge(private$params, params)
+                params <- merge(private$parameters, params)
             }
             query_params(params, ...)
         },
