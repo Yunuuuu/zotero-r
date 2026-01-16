@@ -68,7 +68,7 @@ A full list of methods can be found here:
 \item \href{#method-Zotero-item_fields}{\code{Zotero$item_fields()}}
 \item \href{#method-Zotero-creator_types}{\code{Zotero$creator_types()}}
 \item \href{#method-Zotero-creator_fields}{\code{Zotero$creator_fields()}}
-\item \href{#method-Zotero-new_item}{\code{Zotero$new_item()}}
+\item \href{#method-Zotero-item_template}{\code{Zotero$item_template()}}
 \item \href{#method-Zotero-clone}{\code{Zotero$clone()}}
 }
 }
@@ -856,12 +856,12 @@ Getting Localized Creator Fields
 
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Zotero-new_item"></a>}}
-\if{latex}{\out{\hypertarget{method-Zotero-new_item}{}}}
-\subsection{Method \code{new_item()}}{
-Getting a Template for a New Item
+\if{html}{\out{<a id="method-Zotero-item_template"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-item_template}{}}}
+\subsection{Method \code{item_template()}}{
+Getting a Template for an Item Type
 \subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$new_item(item_type)}\if{html}{\out{</div>}}
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_template(item_type)}\if{html}{\out{</div>}}
 }
 
 \subsection{Arguments}{

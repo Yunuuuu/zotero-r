@@ -658,8 +658,8 @@ Zotero <- R6::R6Class(
             private$req_perform(req)
         },
 
-        #' @description Getting a Template for a New Item
-        new_item = function(item_type) {
+        #' @description Getting a Template for an Item Type
+        item_template = function(item_type) {
             req <- private$request(
                 "items", "new",
                 query = list(itemType = item_type), method = "GET"
