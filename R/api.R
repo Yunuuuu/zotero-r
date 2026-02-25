@@ -90,14 +90,11 @@ Zotero <- R6::R6Class(
 
         #' @description Cache the Zotero API key
         key_cache = function() {
-            private$ensure_key()
+            # we need userid to store the key
+            self$key_complete_info()
             # cache the credential key for future use
             cli::cli_inform(c(
-                ">" = if (is.null(private$userid)) {
-                    "Caching key"
-                } else {
-                    sprintf("Caching key for user ID: {.field %s}", private$userid)
-                }
+                ">" = sprintf("Caching key for user ID: {.field %s}", private$userid)
             ))
             # `acess` and `groups` can be changed after creation
             httr2::secret_write_rds(
@@ -170,7 +167,7 @@ Zotero <- R6::R6Class(
         key_groups = function() {
             if (is.null(private$groups)) {
                 req <- private$request("users", self$key_userid(), "groups")
-                resp <- private$req_perform(req, cache = FALSE)
+                resp <- private$req_perform(req)
                 private$groups <- httr2::resp_body_json(resp)
             }
             private$groups
@@ -185,7 +182,7 @@ Zotero <- R6::R6Class(
             private$ensure_key()
             req <- private$request("keys", private$api_key, method = "DELETE")
             req <- httr2::req_error(req, is_error = function(resp) FALSE)
-            resp <- private$req_perform(req, cache = FALSE)
+            resp <- private$req_perform(req)
             status <- httr2::resp_status(resp)
 
             # Authentication errors (e.g., invalid API key or insufficient
@@ -269,7 +266,7 @@ Zotero <- R6::R6Class(
                 if (is.null(private$zlibrary)) {
                     library_id <- self$key_userid()
                     library_type <- "user"
-                    return(zotero_library(library_id, library_type))
+                    return(.zotero_library(library_id, library_type))
                 } else {
                     return(private$zlibrary)
                 }
@@ -286,7 +283,7 @@ Zotero <- R6::R6Class(
                     # uncommon for users to use "user" type)
                     library_type <- "group"
                 }
-                private$zlibrary <- zotero_library(library_id, library_type)
+                private$zlibrary <- .zotero_library(library_id, library_type)
             }
             invisible(self)
         },
@@ -364,7 +361,7 @@ Zotero <- R6::R6Class(
                 query = private$query(params),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Top-level collections in the library
@@ -374,7 +371,7 @@ Zotero <- R6::R6Class(
                 query = private$query(params),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description A specific collection in the library
@@ -383,7 +380,7 @@ Zotero <- R6::R6Class(
                 collection,
                 query = private$query(params, pagination_params = FALSE)
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Subcollections within a specific collection in the
@@ -393,7 +390,7 @@ Zotero <- R6::R6Class(
                 collection, "collections",
                 query = private$query(params)
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated with a specific collection in the
@@ -403,7 +400,7 @@ Zotero <- R6::R6Class(
                 collection, "tags",
                 query = private$query(params, tag_search_params = TRUE)
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Items within a specific collection in the library
@@ -412,7 +409,7 @@ Zotero <- R6::R6Class(
                 collection, "items",
                 query = private$query(params, item_search_params = TRUE)
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated with the Items within a specific
@@ -426,7 +423,7 @@ Zotero <- R6::R6Class(
                     tag_search_params = TRUE
                 )
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Top-level items within a specific collection in the
@@ -436,7 +433,7 @@ Zotero <- R6::R6Class(
                 collection, "items", "top",
                 query = private$query(params, item_search_params = TRUE)
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated with the top-level items within a
@@ -450,7 +447,7 @@ Zotero <- R6::R6Class(
                     tag_search_params = TRUE
                 )
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description All items in the library, excluding trashed items
@@ -460,7 +457,7 @@ Zotero <- R6::R6Class(
                 query = private$query(params, item_search_params = TRUE),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated all items in the library, excluding
@@ -475,7 +472,7 @@ Zotero <- R6::R6Class(
                 ),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Top-level items in the library, excluding trashed items
@@ -485,7 +482,7 @@ Zotero <- R6::R6Class(
                 query = private$query(params, item_search_params = TRUE),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated with the top-level items in the library
@@ -499,7 +496,7 @@ Zotero <- R6::R6Class(
                 ),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Items in the trash
@@ -513,7 +510,7 @@ Zotero <- R6::R6Class(
                 ),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated with the items in the trash
@@ -528,7 +525,7 @@ Zotero <- R6::R6Class(
                 ),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description A specific item in the library
@@ -540,7 +537,7 @@ Zotero <- R6::R6Class(
                     pagination_params = FALSE
                 )
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated with a specific item in the library
@@ -552,7 +549,7 @@ Zotero <- R6::R6Class(
                     tag_search_params = TRUE
                 )
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Child items under a specific item
@@ -564,7 +561,7 @@ Zotero <- R6::R6Class(
                     item_search_params = TRUE
                 )
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Items in My Publications
@@ -577,7 +574,7 @@ Zotero <- R6::R6Class(
                 ),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Tags associated with the items in My Publications
@@ -591,14 +588,14 @@ Zotero <- R6::R6Class(
                 ),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Get all saved searches in the library
         #' @details Only get the saved searches, not search results.
         saved_searches = function() {
             req <- private$request("searches", library = self$library())
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Get a specific saved search in the library
@@ -609,7 +606,7 @@ Zotero <- R6::R6Class(
                 "searches", search,
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description All tags in the library
@@ -621,14 +618,14 @@ Zotero <- R6::R6Class(
                 ),
                 library = self$library()
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         # Zotero Web API Item Type/Field Requests
         #' @description Getting All Item Types
         item_types = function() {
             req <- private$request("itemTypes", method = "GET")
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Getting All Item Fields or All Valid Fields for an Item
@@ -641,7 +638,7 @@ Zotero <- R6::R6Class(
                     query = list(itemType = item_type), method = "GET",
                 )
             }
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Getting Valid Creator Types for an Item Type
@@ -649,13 +646,13 @@ Zotero <- R6::R6Class(
             req <- private$request("itemTypeCreatorTypes",
                 query = list(itemType = item_type), method = "GET"
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Getting Localized Creator Fields
         creator_fields = function() {
             req <- private$request("creatorFields", method = "GET")
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         },
 
         #' @description Getting a Template for an Item Type
@@ -664,7 +661,7 @@ Zotero <- R6::R6Class(
                 "items", "new",
                 query = list(itemType = item_type), method = "GET"
             )
-            private$req_perform(req)
+            private$req_perform(req, cache = TRUE)
         }
     ),
     private = list(
@@ -702,7 +699,7 @@ Zotero <- R6::R6Class(
         },
         complete_key_info = function() {
             req <- private$request("keys", private$api_key)
-            resp <- private$req_perform(req, cache = FALSE)
+            resp <- private$req_perform(req)
             data <- httr2::resp_body_json(resp)
             private$userid <- as.character(.subset2(data, "userID"))
             private$username <- as.character(.subset2(data, "username"))
@@ -792,10 +789,14 @@ Zotero <- R6::R6Class(
         },
         req_perform = function(req, ..., cache = NULL) {
             private$backoff_wait() # Wait for backoff of last request
-            if (isFALSE(cache) ||
-                cachem::is.key_missing(cache <- req_cache_get(req))) {
+            # By default, we won't use cache
+            if (is.null(cache) || !isTRUE(cache)) {
                 resp <- httr2::req_perform(req, ...)
-                if (httr2::resp_status(resp) == 200L) resp_cache_set(resp)
+            } else if (cachem::is.key_missing(cache <- req_cache_get(req))) {
+                resp <- httr2::req_perform(req, ...)
+                if (httr2::resp_status(resp) == 200L) {
+                    resp_cache_set(resp)
+                }
             } else {
                 version <- httr2::resp_header(cache, "Last-Modified-Version")
                 req <- httr2::req_headers(req,
@@ -897,11 +898,26 @@ Zotero <- R6::R6Class(
 #' @return A `zotero_library` object.
 #' @export
 zotero_library <- function(library_id, library_type) {
+    .zotero_library(library_id, library_type)
+}
+
+#' @importFrom rlang caller_arg caller_env
+.zotero_library <- function(library_id, library_type,
+                            arg_library_id = caller_arg(library_id),
+                            arg_library_type = caller_arg(library_type),
+                            call = caller_env()) {
     if (!(is.character(library_id) || is.numeric(library_id)) ||
         (length(library_id) != 1L || is.na(library_id))) {
-        cli::cli_abort("{.arg library_id} must be a single string")
+        cli::cli_abort(
+            "{.arg {arg_library_id}} must be a single string",
+            call = call
+        )
     }
-    library_type <- rlang::arg_match0(library_type, c("user", "group"))
+    library_type <- rlang::arg_match0(
+        library_type, c("user", "group"),
+        error_arg = arg_library_type,
+        error_call = call
+    )
     structure(
         list(id = as.character(library_id), type = library_type),
         class = "zotero_library"
