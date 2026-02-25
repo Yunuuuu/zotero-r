@@ -153,7 +153,7 @@ param_format <- function(format = NULL, includes = NULL, contents = NULL,
     # Parameters for "format=json"
     if (!is.null(includes)) {
         includes <- unique(as.character(includes))
-        includes <- rlang::arg_match0(includes, c(
+        allowed_includes <- c(
             "bib", "citation", "data",
             # Item Export Formats
             # The following bibliographic data formats can be used as
@@ -162,13 +162,16 @@ param_format <- function(format = NULL, includes = NULL, contents = NULL,
             "bibtex", "biblatex", "bookmarks", "coins",
             "csljson", "csv", "mods", "refer", "rdf_bibliontology",
             "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-        ))
+        )
+        if (!all(includes %in% allowed_includes)) {
+            cli::cli_abort("{.arg includes} must only contain values from {allowed_includes}")
+        }
     }
 
     # Parameters for "format=atom"
     if (!is.null(contents)) {
         contents <- unique(as.character(contents))
-        contents <- rlang::arg_match0(contents, c(
+        allowed_contents <- c(
             "bib", "citation", "html", "json", "none",
             # Item Export Formats
             # The following bibliographic data formats can be used as
@@ -177,7 +180,10 @@ param_format <- function(format = NULL, includes = NULL, contents = NULL,
             "bibtex", "biblatex", "bookmarks", "coins",
             "csljson", "csv", "mods", "refer", "rdf_bibliontology",
             "rdf_dc", "rdf_zotero", "ris", "tei", "wikipedia"
-        ))
+        )
+        if (!all(contents %in% allowed_contents)) {
+            cli::cli_abort("{.arg contents} must only contain values from {allowed_contents}")
+        }
     }
 
     # Parameters for "format=bib", "include/content=bib",
