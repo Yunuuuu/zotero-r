@@ -490,7 +490,8 @@ Zotero <- R6::R6Class(
         #' @description A specific item in the library
         item = function(item, params = NULL) {
             self$perform(
-                item,
+                "items", item,
+                library = self$library(),
                 query = private$query(
                     params,
                     pagination_params = FALSE
@@ -588,25 +589,19 @@ Zotero <- R6::R6Class(
         # Zotero Web API Item Type/Field Requests
         #' @description Getting All Item Types
         item_types = function() {
-            self$perform("itemTypes",
-                method = "GET",
-                cache = TRUE, body = TRUE
-            )
+            self$perform("itemTypes", method = "GET", body = TRUE)
         },
 
         #' @description Getting All Item Fields or All Valid Fields for an Item
         #' Type
         item_fields = function(item_type = NULL) {
             if (is.null(item_type)) {
-                self$perform("itemFields",
-                    method = "GET",
-                    cache = TRUE, body = TRUE
-                )
+                self$perform("itemFields", method = "GET", body = TRUE)
             } else {
                 self$perform("itemTypeFields",
                     query = list(itemType = item_type),
                     method = "GET",
-                    cache = TRUE, body = TRUE
+                    body = TRUE
                 )
             }
         },
@@ -617,17 +612,13 @@ Zotero <- R6::R6Class(
                 "itemTypeCreatorTypes",
                 query = list(itemType = item_type),
                 method = "GET",
-                cache = TRUE, body = TRUE
+                body = TRUE
             )
         },
 
         #' @description Getting Localized Creator Fields
         creator_fields = function() {
-            self$perform(
-                "creatorFields",
-                method = "GET",
-                cache = TRUE, body = TRUE
-            )
+            self$perform("creatorFields", method = "GET", body = TRUE)
         },
 
         #' @description Getting a Template for an Item Type
@@ -635,7 +626,7 @@ Zotero <- R6::R6Class(
             self$perform(
                 "items", "new",
                 query = list(itemType = item_type), method = "GET",
-                cache = TRUE, body = TRUE
+                body = TRUE
             )
         },
 

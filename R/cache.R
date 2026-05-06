@@ -15,6 +15,7 @@ req_cache_get <- function(req) {
     }
 }
 
+#' @importFrom rlang hash
 resp_cache_set <- function(resp) {
     if (!is.null(the$resp_cache) && !the$resp_cache$is_destroyed()) {
         url <- httr2::resp_url(resp)
