@@ -705,7 +705,9 @@ Zotero <- R6::R6Class(
             if (!isTRUE(body)) {
                 return(resp)
             }
-            if (is.null(query) || rlang::is_string(query$format, "json")) {
+            if (is.null(query) ||
+                is.null(query$format) ||
+                rlang::is_string(query$format, "json")) {
                 httr2::resp_body_json(resp)
             } else if (rlang::is_string(query$format, "atom")) {
                 httr2::resp_body_xml(resp)
