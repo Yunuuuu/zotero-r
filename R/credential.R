@@ -14,10 +14,7 @@ credential_get <- function(userid = NULL) {
         key <- NULL
     } else {
         key <- tryCatch(
-            httr2::secret_read_rds(
-                credential_key_path(userid),
-                I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
-            ),
+            .secret$read_rds(credential_key_path(userid)),
             error = function(cnd) NULL
         )
         if (is.null(key)) {
@@ -47,10 +44,7 @@ credential_get <- function(userid = NULL) {
             missing <- 0L
             for (path in credential_files) {
                 key0 <- tryCatch(
-                    httr2::secret_read_rds(
-                        path,
-                        I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
-                    ),
+                    .secret$read_rds(path),
                     error = function(cnd) NULL
                 )
                 if (!is.null(key0)) {

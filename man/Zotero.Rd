@@ -6,11 +6,12 @@
 \value{
 \itemize{
 \item If the HTTP request succeeds, and the status code is ok (e.g.
-200), an HTTP \link[httr2:response]{response}.
+200), an HTTP \link[httr2:response]{response} or the \code{json}/\code{atom}
+body if \code{body = TRUE}.
 \item If the HTTP request succeeds, but the status code is an error
-(e.g a 404), an error with class \code{c("httr2_http_404", "httr2_http")}.  By default, all 400 and 500 status codes will be
-treated as an error, but you can customise this with
-\link[httr2:req_error]{req_error()}.
+(e.g a 404), an error with class \code{c("httr2_http_404", "httr2_http")}. By default, all 400 and 500 status codes will be
+treated as an error, but you can customise this with \code{is_error}
+argument.
 \item If the HTTP request fails (e.g. the connection is dropped or the
 server doesn't exist), an error with class \code{"httr2_failure"}.
 }
@@ -40,7 +41,6 @@ A full list of methods can be found here:
 \item \href{#method-Zotero-key_revoke}{\code{Zotero$key_revoke()}}
 \item \href{#method-Zotero-library}{\code{Zotero$library()}}
 \item \href{#method-Zotero-params}{\code{Zotero$params()}}
-\item \href{#method-Zotero-perform}{\code{Zotero$perform()}}
 \item \href{#method-Zotero-collections}{\code{Zotero$collections()}}
 \item \href{#method-Zotero-collections_top}{\code{Zotero$collections_top()}}
 \item \href{#method-Zotero-collection}{\code{Zotero$collection()}}
@@ -69,6 +69,7 @@ A full list of methods can be found here:
 \item \href{#method-Zotero-creator_types}{\code{Zotero$creator_types()}}
 \item \href{#method-Zotero-creator_fields}{\code{Zotero$creator_fields()}}
 \item \href{#method-Zotero-item_template}{\code{Zotero$item_template()}}
+\item \href{#method-Zotero-perform}{\code{Zotero$perform()}}
 \item \href{#method-Zotero-clone}{\code{Zotero$clone()}}
 }
 }
@@ -297,69 +298,6 @@ Determine or Set the global parameters
 A \code{zotero_params} object when \code{...} is empty, otherwise,
 returns the Zotero instance itself, allowing for method chaining.
 }
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Zotero-perform"></a>}}
-\if{latex}{\out{\hypertarget{method-Zotero-perform}{}}}
-\subsection{Method \code{perform()}}{
-Perform the Zotero API Request
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$perform(
-  ...,
-  library = NULL,
-  query = NULL,
-  method = NULL,
-  cache = NULL,
-  path = NULL,
-  verbosity = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{...}}{Character strings representing the path components to
-append to the Zotero API base URL.}
-
-\item{\code{library}}{A \code{\link[=zotero_library]{zotero_library()}} object. If provided, the
-request URL will be prefixed with the relevant library path
-(\verb{/users/<userID>} or \verb{/groups/<groupID>}).}
-
-\item{\code{query}}{Optional named list of query parameters to be added to
-the request URL.}
-
-\item{\code{method}}{Custom HTTP method.}
-
-\item{\code{cache}}{A logical value indicates whether we should try to use
-conditional request for caching.}
-
-\item{\code{path}}{Optionally, path to save body of the response. This is
-useful for large responses since it avoids storing the response in
-memory.}
-
-\item{\code{verbosity}}{How much information to print? This is a wrapper
-around \link[httr2:req_verbose]{req_verbose()} that uses an integer to
-control verbosity:
-\itemize{
-\item \code{0}: no output
-\item \code{1}: show headers
-\item \code{2}: show headers and bodies
-\item \code{3}: show headers, bodies, and curl status messages.
-}
-
-Use \link[httr2:with_verbosity]{with_verbosity()} to control the
-verbosity of requests that you can't affect directly.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-This method constructs a request of the Zotero API and perform it. It
-allows you to specify the URL path components and optional query
-parameters, and includes support for prefixing library-specific paths
-(e.g., \verb{/users/<userID>} or \verb{/groups/<groupID>}) when interacting
-with data from specific libraries.
-}
-
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collections"></a>}}
@@ -871,6 +809,80 @@ Getting a Template for an Item Type
 }
 \if{html}{\out{</div>}}
 }
+}
+\if{html}{\out{<hr>}}
+\if{html}{\out{<a id="method-Zotero-perform"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-perform}{}}}
+\subsection{Method \code{perform()}}{
+Perform the Zotero API Request
+\subsection{Usage}{
+\if{html}{\out{<div class="r">}}\preformatted{Zotero$perform(
+  ...,
+  library = NULL,
+  query = NULL,
+  method = NULL,
+  cache = NULL,
+  body = NULL,
+  is_error = NULL,
+  path = NULL,
+  verbosity = NULL
+)}\if{html}{\out{</div>}}
+}
+
+\subsection{Arguments}{
+\if{html}{\out{<div class="arguments">}}
+\describe{
+\item{\code{...}}{Character strings representing the path components to
+append to the Zotero API base URL.}
+
+\item{\code{library}}{A \code{\link[=zotero_library]{zotero_library()}} object, usually
+\code{self$library()}. If provided, the request URL is prefixed with the
+relevant library path (\verb{/users/<userID>} or \verb{/groups/<groupID>}).}
+
+\item{\code{query}}{Optional named list of query parameters to be added to
+the request URL. Note that the associated parameters will not be
+automatically added to the query string; you must manually specify
+the query if needed.}
+
+\item{\code{method}}{Custom HTTP method.}
+
+\item{\code{cache}}{A logical value indicates whether we should try to use
+conditional request for caching.}
+
+\item{\code{body}}{A logical value indicates whether we should try to
+extract the \code{json}/\code{atom} body from the returned response.}
+
+\item{\code{is_error}}{A predicate function that takes a single argument
+(the response) and returns \code{TRUE} or \code{FALSE} indicating whether or
+not an R error should be signalled.}
+
+\item{\code{path}}{Optionally, path to save body of the response. This is
+useful for large responses since it avoids storing the response in
+memory.}
+
+\item{\code{verbosity}}{How much information to print? This is a wrapper
+around \link[httr2:req_verbose]{req_verbose()} that uses an integer to
+control verbosity:
+\itemize{
+\item \code{0}: no output
+\item \code{1}: show headers
+\item \code{2}: show headers and bodies
+\item \code{3}: show headers, bodies, and curl status messages.
+}
+
+Use \link[httr2:with_verbosity]{with_verbosity()} to control the
+verbosity of requests that you can't affect directly.}
+}
+\if{html}{\out{</div>}}
+}
+\subsection{Details}{
+This method constructs a request of the Zotero API and perform it. It
+allows you to specify the URL path components and optional query
+parameters, and includes support for prefixing library-specific paths
+(e.g., \verb{/users/<userID>} or \verb{/groups/<groupID>}) when interacting
+with data from specific libraries.
+}
+
 }
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-clone"></a>}}

@@ -97,7 +97,7 @@ Zotero <- R6::R6Class(
                 ">" = sprintf("Caching key for user ID: {.field %s}", private$userid)
             ))
             # `acess` and `groups` can be changed after creation
-            httr2::secret_write_rds(
+            .secret$write_rds(
                 list(
                     api_key = private$api_key,
                     userid = private$userid,
@@ -106,14 +106,14 @@ Zotero <- R6::R6Class(
                     # access = private$access,
                     # groups = private$groups
                 ),
-                credential_key_path(private$userid),
-                I(httr2_fun("unobfuscate")(.secret$obfuscate_key()))
+                credential_key_path(private$userid)
             )
             private$key_cached <- TRUE
 
             # Save the user ID of the credential key for future reference
+            credential_userids_file <- credential_userids_path()
             credential_userids <- tryCatch(
-                readRDS(credential_userids_path()),
+                readRDS(credential_userids_file),
                 error = function(cnd) NULL
             )
             credential_userids <- unique(c(private$userid, credential_userids))
@@ -166,9 +166,12 @@ Zotero <- R6::R6Class(
         #' membership in.
         key_groups = function() {
             if (is.null(private$groups)) {
-                req <- private$request("users", self$key_userid(), "groups")
-                resp <- private$req_perform(req)
-                private$groups <- httr2::resp_body_json(resp)
+                private$groups <- self$perform(
+                    "users",
+                    self$key_userid(),
+                    "groups",
+                    body = TRUE
+                )
             }
             private$groups
         },
@@ -180,9 +183,11 @@ Zotero <- R6::R6Class(
         key_revoke = function() {
             # we need userid to remove the cached key
             private$ensure_key()
-            req <- private$request("keys", private$api_key, method = "DELETE")
-            req <- httr2::req_error(req, is_error = function(resp) FALSE)
-            resp <- private$req_perform(req)
+            resp <- self$perform(
+                "keys", private$api_key,
+                method = "DELETE",
+                is_error = function(resp) FALSE
+            )
             status <- httr2::resp_status(resp)
 
             # Authentication errors (e.g., invalid API key or insufficient
@@ -300,6 +305,340 @@ Zotero <- R6::R6Class(
             invisible(self)
         },
 
+        #' @description Collections in the library
+        collections = function(params = NULL) {
+            self$perform(
+                "collections",
+                library = self$library(),
+                query = private$query(params),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Top-level collections in the library
+        collections_top = function(params = NULL) {
+            self$perform(
+                "collections", "top",
+                library = self$library(),
+                query = private$query(params),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description A specific collection in the library
+        collection = function(collection, params = NULL) {
+            self$perform(
+                collection,
+                query = private$query(params, pagination_params = FALSE),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Subcollections within a specific collection in the
+        #' library
+        collection_subgroups = function(collection, params = NULL) {
+            self$perform(
+                collection, "collections",
+                query = private$query(params),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated with a specific collection in the
+        #' library
+        collection_tags = function(collection, params = NULL) {
+            self$perform(
+                collection, "tags",
+                query = private$query(params, tag_search_params = TRUE),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Items within a specific collection in the library
+        collection_items = function(collection, params = NULL) {
+            assert_string(collection, allow_empty = FALSE, call = call)
+            self$perform(
+                "collections", collection, "items",
+                library = self$library(),
+                query = private$query(params, item_search_params = TRUE),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated with the Items within a specific
+        #' collection in the library
+        collection_items_tags = function(collection, params = NULL) {
+            assert_string(collection, allow_empty = FALSE, call = call)
+            self$perform(
+                collection, "items", "tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Top-level items within a specific collection in the
+        #' library
+        collection_items_top = function(collection, params = NULL) {
+            assert_string(collection, allow_empty = FALSE, call = call)
+            self$perform(
+                collection, "items", "top",
+                library = self$library(),
+                query = private$query(params, item_search_params = TRUE),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated with the top-level items within a
+        #' specific collection in the library
+        collection_items_top_tags = function(collection, params = NULL) {
+            assert_string(collection, allow_empty = FALSE, call = call)
+            self$perform(
+                collection, "items", "top", "tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description All items in the library, excluding trashed items
+        items = function(params = NULL) {
+            self$perform(
+                "items",
+                library = self$library(),
+                query = private$query(params, item_search_params = TRUE),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated all items in the library, excluding
+        #' trashed items
+        items_tags = function(params = NULL) {
+            self$perform(
+                "items", "tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Top-level items in the library, excluding trashed items
+        items_top = function(params = NULL) {
+            self$perform(
+                "items", "top",
+                library = self$library(),
+                query = private$query(params, item_search_params = TRUE),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated with the top-level items in the library
+        items_top_tags = function(params = NULL) {
+            self$perform(
+                "items", "top", "tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Items in the trash
+        items_trash = function(params = NULL) {
+            self$perform(
+                "items", "trash",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    trash_param = FALSE,
+                    item_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated with the items in the trash
+        items_trash_tags = function(params = NULL) {
+            self$perform(
+                "items", "trash", "tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    trash_param = FALSE,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description A specific item in the library
+        item = function(item, params = NULL) {
+            self$perform(
+                item,
+                query = private$query(
+                    params,
+                    pagination_params = FALSE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated with a specific item in the library
+        item_tags = function(item, params = NULL) {
+            assert_string(item, allow_empty = FALSE, call = call)
+            self$perform(
+                "items", item, "tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Child items under a specific item
+        item_children = function(item, params = NULL) {
+            self$perform(
+                "items", item, "children",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    item_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Items in My Publications
+        publication_items = function(params = NULL) {
+            self$perform(
+                "publications", "items",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    item_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Tags associated with the items in My Publications
+        publication_items_tags = function(params = NULL) {
+            self$perform(
+                "publications", "items", "tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    item_search_params = TRUE,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Get all saved searches in the library
+        #' @details Only get the saved searches, not search results.
+        saved_searches = function() {
+            self$perform("searches",
+                library = self$library(),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Get a specific saved search in the library
+        #' @details Only get the saved searches, not search results.
+        saved_search = function(search) {
+            assert_string(search, allow_empty = FALSE)
+            self$perform(
+                "searches", search,
+                library = self$library(),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description All tags in the library
+        tags = function(params = NULL) {
+            self$perform("tags",
+                library = self$library(),
+                query = private$query(
+                    params,
+                    tag_search_params = TRUE
+                ),
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        # Zotero Web API Item Type/Field Requests
+        #' @description Getting All Item Types
+        item_types = function() {
+            self$perform("itemTypes",
+                method = "GET",
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Getting All Item Fields or All Valid Fields for an Item
+        #' Type
+        item_fields = function(item_type = NULL) {
+            if (is.null(item_type)) {
+                self$perform("itemFields",
+                    method = "GET",
+                    cache = TRUE, body = TRUE
+                )
+            } else {
+                self$perform("itemTypeFields",
+                    query = list(itemType = item_type),
+                    method = "GET",
+                    cache = TRUE, body = TRUE
+                )
+            }
+        },
+
+        #' @description Getting Valid Creator Types for an Item Type
+        creator_types = function(item_type) {
+            self$perform(
+                "itemTypeCreatorTypes",
+                query = list(itemType = item_type),
+                method = "GET",
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Getting Localized Creator Fields
+        creator_fields = function() {
+            self$perform(
+                "creatorFields",
+                method = "GET",
+                cache = TRUE, body = TRUE
+            )
+        },
+
+        #' @description Getting a Template for an Item Type
+        item_template = function(item_type) {
+            self$perform(
+                "items", "new",
+                query = list(itemType = item_type), method = "GET",
+                cache = TRUE, body = TRUE
+            )
+        },
+
         #' @description Perform the Zotero API Request
         #' @details
         #' This method constructs a request of the Zotero API and perform it. It
@@ -309,14 +648,21 @@ Zotero <- R6::R6Class(
         #' with data from specific libraries.
         #' @param ... Character strings representing the path components to
         #' append to the Zotero API base URL.
-        #' @param library A [`zotero_library()`] object. If provided, the
-        #' request URL will be prefixed with the relevant library path
-        #' (`/users/<userID>` or `/groups/<groupID>`).
+        #' @param library A [`zotero_library()`] object, usually
+        #' `self$library()`. If provided, the request URL is prefixed with the
+        #' relevant library path (`/users/<userID>` or `/groups/<groupID>`).
         #' @param query Optional named list of query parameters to be added to
-        #' the request URL.
+        #' the request URL. Note that the associated parameters will not be
+        #' automatically added to the query string; you must manually specify
+        #' the query if needed.
         #' @param method Custom HTTP method.
         #' @param cache A logical value indicates whether we should try to use
         #' conditional request for caching.
+        #' @param body A logical value indicates whether we should try to
+        #' extract the `json`/`atom` body from the returned response.
+        #' @param is_error A predicate function that takes a single argument
+        #' (the response) and returns `TRUE` or `FALSE` indicating whether or
+        #' not an R error should be signalled.
         #' @param path Optionally, path to save body of the response. This is
         #'   useful for large responses since it avoids storing the response in
         #'   memory.
@@ -333,335 +679,39 @@ Zotero <- R6::R6Class(
         #'   verbosity of requests that you can't affect directly.
         #' @returns
         #'   * If the HTTP request succeeds, and the status code is ok (e.g.
-        #'     200), an HTTP [response][httr2::response].
+        #'     200), an HTTP [response][httr2::response] or the `json`/`atom`
+        #'     body if `body = TRUE`.
         #'
         #'   * If the HTTP request succeeds, but the status code is an error
         #'     (e.g a 404), an error with class `c("httr2_http_404",
-        #'     "httr2_http")`.  By default, all 400 and 500 status codes will be
-        #'     treated as an error, but you can customise this with
-        #'     [req_error()][httr2::req_error].
+        #'     "httr2_http")`. By default, all 400 and 500 status codes will be
+        #'     treated as an error, but you can customise this with `is_error`
+        #'     argument.
         #'
         #'   * If the HTTP request fails (e.g. the connection is dropped or the
         #'     server doesn't exist), an error with class `"httr2_failure"`.
         perform = function(..., library = NULL, query = NULL, method = NULL,
-                           cache = NULL, path = NULL, verbosity = NULL) {
+                           cache = NULL, body = NULL, is_error = NULL,
+                           path = NULL, verbosity = NULL) {
             req <- private$request(...,
-                query = query, method = method,
-                library = library
+                library = library, query = query, method = method
             )
-            private$req_perform(req,
+            if (!is.null(is_error)) {
+                req <- httr2::req_error(req, is_error = is_error)
+            }
+            resp <- private$req_perform(req,
                 cache = cache, path = path, verbosity = verbosity
             )
-        },
-
-        #' @description Collections in the library
-        collections = function(params = NULL) {
-            req <- private$request(
-                "collections",
-                query = private$query(params),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Top-level collections in the library
-        collections_top = function(params = NULL) {
-            req <- private$request(
-                "collections", "top",
-                query = private$query(params),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description A specific collection in the library
-        collection = function(collection, params = NULL) {
-            req <- private$req_collection(
-                collection,
-                query = private$query(params, pagination_params = FALSE)
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Subcollections within a specific collection in the
-        #' library
-        collection_subgroups = function(collection, params = NULL) {
-            req <- private$req_collection(
-                collection, "collections",
-                query = private$query(params)
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated with a specific collection in the
-        #' library
-        collection_tags = function(collection, params = NULL) {
-            req <- private$req_collection(
-                collection, "tags",
-                query = private$query(params, tag_search_params = TRUE)
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Items within a specific collection in the library
-        collection_items = function(collection, params = NULL) {
-            req <- private$req_collection(
-                collection, "items",
-                query = private$query(params, item_search_params = TRUE)
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated with the Items within a specific
-        #' collection in the library
-        collection_items_tags = function(collection, params = NULL) {
-            req <- private$req_collection(
-                collection, "items", "tags",
-                query = private$query(
-                    params,
-                    item_search_params = TRUE,
-                    tag_search_params = TRUE
-                )
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Top-level items within a specific collection in the
-        #' library
-        collection_items_top = function(collection, params = NULL) {
-            req <- private$req_collection(
-                collection, "items", "top",
-                query = private$query(params, item_search_params = TRUE)
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated with the top-level items within a
-        #' specific collection in the library
-        collection_items_top_tags = function(collection, params = NULL) {
-            req <- private$req_collection(
-                collection, "items", "top", "tags",
-                query = private$query(
-                    params,
-                    item_search_params = TRUE,
-                    tag_search_params = TRUE
-                )
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description All items in the library, excluding trashed items
-        items = function(params = NULL) {
-            req <- private$request(
-                "items",
-                query = private$query(params, item_search_params = TRUE),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated all items in the library, excluding
-        #' trashed items
-        items_tags = function(params = NULL) {
-            req <- private$request(
-                "items", "tags",
-                query = private$query(
-                    params,
-                    item_search_params = TRUE,
-                    tag_search_params = TRUE
-                ),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Top-level items in the library, excluding trashed items
-        items_top = function(params = NULL) {
-            req <- private$request(
-                "items", "top",
-                query = private$query(params, item_search_params = TRUE),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated with the top-level items in the library
-        items_top_tags = function(params = NULL) {
-            req <- private$request(
-                "items", "top", "tags",
-                query = private$query(
-                    params,
-                    item_search_params = TRUE,
-                    tag_search_params = TRUE
-                ),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Items in the trash
-        items_trash = function(params = NULL) {
-            req <- private$request(
-                "items", "trash",
-                query = private$query(
-                    params,
-                    include_trash_param = FALSE,
-                    item_search_params = TRUE
-                ),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated with the items in the trash
-        items_trash_tags = function(params = NULL) {
-            req <- private$request(
-                "items", "trash", "tags",
-                query = private$query(
-                    params,
-                    include_trash_param = FALSE,
-                    item_search_params = TRUE,
-                    tag_search_params = TRUE
-                ),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description A specific item in the library
-        item = function(item, params = NULL) {
-            req <- private$req_item(
-                item,
-                query = private$query(
-                    params,
-                    pagination_params = FALSE
-                )
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated with a specific item in the library
-        item_tags = function(item, params = NULL) {
-            req <- private$req_item(
-                item, "tags",
-                query = private$query(
-                    params,
-                    tag_search_params = TRUE
-                )
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Child items under a specific item
-        item_children = function(item, params = NULL) {
-            req <- private$req_item(
-                item, "children",
-                query = private$query(
-                    params,
-                    item_search_params = TRUE
-                )
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Items in My Publications
-        publication_items = function(params = NULL) {
-            req <- private$request(
-                "publications", "items",
-                query = private$query(
-                    params,
-                    item_search_params = TRUE
-                ),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Tags associated with the items in My Publications
-        publication_items_tags = function(params = NULL) {
-            req <- private$request(
-                "publications", "items", "tags",
-                query = private$query(
-                    params,
-                    item_search_params = TRUE,
-                    tag_search_params = TRUE
-                ),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Get all saved searches in the library
-        #' @details Only get the saved searches, not search results.
-        saved_searches = function() {
-            req <- private$request("searches", library = self$library())
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Get a specific saved search in the library
-        #' @details Only get the saved searches, not search results.
-        saved_search = function(search) {
-            assert_string(search, allow_empty = FALSE)
-            req <- private$request(
-                "searches", search,
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description All tags in the library
-        tags = function(params = NULL) {
-            req <- private$request("tags",
-                query = private$query(
-                    params,
-                    tag_search_params = TRUE
-                ),
-                library = self$library()
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        # Zotero Web API Item Type/Field Requests
-        #' @description Getting All Item Types
-        item_types = function() {
-            req <- private$request("itemTypes", method = "GET")
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Getting All Item Fields or All Valid Fields for an Item
-        #' Type
-        item_fields = function(item_type = NULL) {
-            if (is.null(item_type)) {
-                req <- private$request("itemFields", method = "GET")
-            } else {
-                req <- private$request("itemTypeFields",
-                    query = list(itemType = item_type), method = "GET",
-                )
+            if (!isTRUE(body)) {
+                return(resp)
             }
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Getting Valid Creator Types for an Item Type
-        creator_types = function(item_type) {
-            req <- private$request("itemTypeCreatorTypes",
-                query = list(itemType = item_type), method = "GET"
-            )
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Getting Localized Creator Fields
-        creator_fields = function() {
-            req <- private$request("creatorFields", method = "GET")
-            private$req_perform(req, cache = TRUE)
-        },
-
-        #' @description Getting a Template for an Item Type
-        item_template = function(item_type) {
-            req <- private$request(
-                "items", "new",
-                query = list(itemType = item_type), method = "GET"
-            )
-            private$req_perform(req, cache = TRUE)
+            if (is.null(query) || rlang::is_string(query$format, "json")) {
+                httr2::resp_body_json(resp)
+            } else if (rlang::is_string(query$format, "atom")) {
+                httr2::resp_body_xml(resp)
+            } else {
+                resp
+            }
         }
     ),
     private = list(
@@ -698,9 +748,7 @@ Zotero <- R6::R6Class(
                 !is.null(private$access)
         },
         complete_key_info = function() {
-            req <- private$request("keys", private$api_key)
-            resp <- private$req_perform(req)
-            data <- httr2::resp_body_json(resp)
+            data <- self$perform("keys", private$api_key, body = TRUE)
             private$userid <- as.character(.subset2(data, "userID"))
             private$username <- as.character(.subset2(data, "username"))
             private$access <- .subset2(data, "access")
@@ -857,20 +905,61 @@ Zotero <- R6::R6Class(
                 as.integer(Sys.time() - private$backoff_startup)
             max(reminder, 0L)
         },
-        query = function(params = NULL, ...) {
+        query = function(params, pagination_params = TRUE,
+                         filter_params = item_search_params ||
+                             tag_search_params,
+                         trash_param = item_search_params,
+                         item_search_params = FALSE,
+                         tag_search_params = FALSE) {
             if (is.null(params)) {
                 params <- private$parameters
             } else {
                 params <- merge(private$parameters, params)
             }
-            query_params(params, ...)
-        },
-        req_collection = function(collection, ..., call = caller_env()) {
-            assert_string(collection, allow_empty = FALSE, call = call)
-            private$request(
-                "collections", collection, ...,
-                library = self$library()
-            )
+            format <- query_params(params$format %||% param_format())
+            if (pagination_params) {
+                pagination <- query_params(
+                    params$pagination %||% param_pagination(),
+                    format = format$format
+                )
+            } else {
+                pagination <- NULL
+            }
+            if (filter_params) {
+                filter <- query_params(
+                    params$filter %||% param_filter(),
+                    trash_param = trash_param
+                )
+            } else {
+                filter <- NULL
+            }
+            if (item_search_params) {
+                item_search <- query_params(
+                    params$item_search %||% param_search(),
+                    mode = "titleCreatorYear"
+                )
+                if (tag_search_params) {
+                    item_search <- list(
+                        itemQ = item_search$q,
+                        itemQMode = item_search$qmode,
+                        itemTag = item_search$tag
+                    )
+                    item_search <- item_search[
+                        !vapply(item_search, is.null, logical(1L), USE.NAMES = FALSE)
+                    ]
+                }
+            } else {
+                item_search <- NULL
+            }
+            if (tag_search_params) {
+                tag_search <- query_params(
+                    params$tag_search %||% param_search(),
+                    mode = "contains"
+                )
+            } else {
+                tag_search <- NULL
+            }
+            c(format, filter, item_search, tag_search, pagination)
         },
         req_item = function(item, ..., call = caller_env()) {
             assert_string(item, allow_empty = FALSE, call = call)
@@ -915,7 +1004,7 @@ zotero_library <- function(library_id, library_type) {
     }
     library_type <- rlang::arg_match0(
         library_type, c("user", "group"),
-        error_arg = arg_library_type,
+        arg_nm = arg_library_type,
         error_call = call
     )
     structure(

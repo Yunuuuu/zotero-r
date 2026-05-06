@@ -63,60 +63,6 @@ merge.zotero_parameters <- function(x, y, ...) {
     x
 }
 
-#' @export
-query_params.zotero_parameters <- function(
-    params, ...,
-    pagination_params = TRUE,
-    filter_params = item_search_params || tag_search_params,
-    include_trash_param = item_search_params,
-    item_search_params = FALSE,
-    tag_search_params = FALSE) {
-    format <- query_params(params$format %||% param_format())
-    if (pagination_params) {
-        pagination <- query_params(
-            params$pagination %||% param_pagination(),
-            format = format$format
-        )
-    } else {
-        pagination <- NULL
-    }
-    if (filter_params) {
-        filter <- query_params(
-            params$filter %||% param_filter(),
-            include_trash_param = include_trash_param
-        )
-    } else {
-        filter <- NULL
-    }
-    if (item_search_params) {
-        item_search <- query_params(
-            params$item_search %||% param_search(),
-            mode = "titleCreatorYear"
-        )
-        if (tag_search_params) {
-            item_search <- list(
-                itemQ = item_search$q,
-                itemQMode = item_search$qmode,
-                itemTag = item_search$tag
-            )
-            item_search <- item_search[
-                !vapply(item_search, is.null, logical(1L), USE.NAMES = FALSE)
-            ]
-        }
-    } else {
-        item_search <- NULL
-    }
-    if (tag_search_params) {
-        tag_search <- query_params(
-            params$tag_search %||% param_search(),
-            mode = "contains"
-        )
-    } else {
-        tag_search <- NULL
-    }
-    c(format, filter, item_search, tag_search, pagination)
-}
-
 #' Format parameters for Zotero API
 #'
 #' @param format Format of the response.
@@ -228,10 +174,10 @@ query_params.param_format <- function(params, ...) {
     }
     if (use_style) {
         query$style <- params$style %||% "chicago-note-bibliography"
-        query$linkwrap <- if (params$linkwrap %||% FALSE) {
-            "1"
-        } else {
+        query$linkwrap <- if (is.null(params$linkwrap) || !params$linkwrap) {
             "0"
+        } else {
+            "1"
         }
         query$locale <- params$locale %||% "en-US"
     }
@@ -334,7 +280,7 @@ merge.param_filter <- function(x, y, ...) {
 }
 
 #' @export
-query_params.param_filter <- function(params, ..., include_trash_param = FALSE) {
+query_params.param_filter <- function(params, ..., trash_param = FALSE) {
     query <- list()
     if (!is.null(params$items)) {
         query$itemKey <- paste(params$items, collapse = ",")
@@ -344,7 +290,7 @@ query_params.param_filter <- function(params, ..., include_trash_param = FALSE) 
         query <- c(query, itemType)
     }
     query$since <- params$since %||% 0L
-    if (include_trash_param) {
+    if (trash_param) {
         query$includeTrashed <- if (params$include_trashed %||% FALSE) {
             "1"
         } else {

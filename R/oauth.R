@@ -19,14 +19,9 @@ zotero_oauth_client <- function(redirect_uri = NULL) {
     redirect <- httr2_fun("normalize_redirect_uri")(redirect_uri)
     redirect$local_display <- .Platform$GUI == "AQUA" ||
         grepl("^(localhost|):", Sys.getenv("DISPLAY"))
-    structure(
-        list(
-            secret = .secret$client_secret,
-            key = .secret$client_key,
-            redirect = redirect
-        ),
-        class = "zotero_oauth_client"
-    )
+    redirect$redirect_uri <- redirect$uri
+    redirect$uri <- NULL
+    structure(redirect, class = "zotero_oauth_client")
 }
 
 zotero_oauth_request <- function(client, request) {
@@ -34,9 +29,11 @@ zotero_oauth_request <- function(client, request) {
     req <- httr2::req_method(req, "POST")
     req <- httr2::req_headers(req, Authorization = oauth_header(oauth_params(
         httr2::req_get_method(req), httr2::req_get_url(req),
-        key = httr2_fun("unobfuscate")(client$key()),
-        secret = httr2_fun("unobfuscate")(client$secret()),
-        redirect = client$redirect
+        key = .secret$client_key(),
+        secret = .secret$client_secret(),
+        localhost = client$localhost,
+        local_display = client$local_display,
+        redirect_uri = client$redirect_uri
     )))
     token_data <- httr2::resp_body_string(httr2::req_perform(req))
     token_data <- strsplit(
@@ -63,8 +60,7 @@ zotero_oauth_authorize <- function(client, token, authorize) {
         all_groups = "wirte"
     )
     utils::browseURL(req$url)
-    if (client$redirect$localhost &&
-        client$redirect$local_display) {
+    if (client$localhost && client$local_display) {
         # Listen on localhost for the result
         parsed <- httr2::url_parse(client$redirect$uri)
         path <- parsed$path %||% "/"
@@ -120,9 +116,11 @@ zotero_oauth_access <- function(client, token, verifier, access) {
     req <- httr2::req_method(req, "POST")
     req <- httr2::req_headers(req, Authorization = oauth_header(oauth_params(
         req$method, req$url,
-        key = httr2_fun("unobfuscate")(client$key()),
-        secret = httr2_fun("unobfuscate")(client$secret()),
-        redirect = client$redirect,
+        key = .secret$client_key(),
+        secret = .secret$client_secret(),
+        localhost = client$localhost,
+        local_display = client$local_display,
+        redirect_uri = client$redirect_uri,
         token = token$oauth_token,
         token_secret = token$oauth_token_secret,
         verifier = verifier
@@ -142,11 +140,12 @@ zotero_oauth_access <- function(client, token, verifier, access) {
     token_values
 }
 
-oauth_params <- function(method, url, key, secret, redirect,
+oauth_params <- function(method, url, key, secret,
+                         localhost, local_display, redirect_uri,
                          private_key = NULL, token = NULL,
                          token_secret = NULL, verifier = NULL) {
     params <- list(
-        oauth_consumer_key = key,
+        oauth_consumer_key = httr2_fun("unobfuscate")(key),
         oauth_nonce = nonce(10L),
         oauth_timestamp = as.character(as.integer(Sys.time())),
         oauth_version = "1.0"
@@ -156,8 +155,8 @@ oauth_params <- function(method, url, key, secret, redirect,
     } else {
         params$oauth_signature_method <- "RSA-SHA1"
     }
-    if (redirect$localhost && redirect$local_display) {
-        params$oauth_callback <- redirect$uri
+    if (localhost && local_display) {
+        params$oauth_callback <- redirect_uri
     } else {
         params$oauth_callback <- "https://www.zotero.org"
     }
@@ -172,7 +171,7 @@ oauth_params <- function(method, url, key, secret, redirect,
     if (is.null(private_key)) {
         # Prepare the private key (consumer secret & token secret)
         private_key <- paste0(
-            oauth_encode(secret), "&",
+            oauth_encode(httr2_fun("unobfuscate")(secret)), "&",
             if (!is.null(token_secret)) oauth_encode(token_secret)
         )
         hash <- openssl::sha1(string, key = charToRaw(private_key))
