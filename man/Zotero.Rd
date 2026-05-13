@@ -3,22 +3,7 @@
 \name{Zotero}
 \alias{Zotero}
 \title{Zotero instance}
-\value{
-\itemize{
-\item If the HTTP request succeeds, and the status code is ok (e.g.
-200), an HTTP \link[httr2:response]{response} or the \code{json}/\code{atom}
-body if \code{body = TRUE}.
-\item If the HTTP request succeeds, but the status code is an error
-(e.g a 404), an error with class \code{c("httr2_http_404", "httr2_http")}. By default, all 400 and 500 status codes will be
-treated as an error, but you can customise this with \code{is_error}
-argument.
-\item If the HTTP request fails (e.g. the connection is dropped or the
-server doesn't exist), an error with class \code{"httr2_failure"}.
-}
-}
 \description{
-Zotero instance
-
 Zotero instance
 }
 \seealso{
@@ -27,232 +12,250 @@ A full list of methods can be found here:
 }
 \section{Methods}{
 \subsection{Public methods}{
-\itemize{
-\item \href{#method-Zotero-new}{\code{Zotero$new()}}
-\item \href{#method-Zotero-key_set}{\code{Zotero$key_set()}}
-\item \href{#method-Zotero-key_oauth}{\code{Zotero$key_oauth()}}
-\item \href{#method-Zotero-key_read}{\code{Zotero$key_read()}}
-\item \href{#method-Zotero-key_cache}{\code{Zotero$key_cache()}}
-\item \href{#method-Zotero-key_complete_info}{\code{Zotero$key_complete_info()}}
-\item \href{#method-Zotero-key_userid}{\code{Zotero$key_userid()}}
-\item \href{#method-Zotero-key_username}{\code{Zotero$key_username()}}
-\item \href{#method-Zotero-key_access}{\code{Zotero$key_access()}}
-\item \href{#method-Zotero-key_groups}{\code{Zotero$key_groups()}}
-\item \href{#method-Zotero-key_revoke}{\code{Zotero$key_revoke()}}
-\item \href{#method-Zotero-library}{\code{Zotero$library()}}
-\item \href{#method-Zotero-params}{\code{Zotero$params()}}
-\item \href{#method-Zotero-collections}{\code{Zotero$collections()}}
-\item \href{#method-Zotero-collections_top}{\code{Zotero$collections_top()}}
-\item \href{#method-Zotero-collection}{\code{Zotero$collection()}}
-\item \href{#method-Zotero-collection_subgroups}{\code{Zotero$collection_subgroups()}}
-\item \href{#method-Zotero-collection_tags}{\code{Zotero$collection_tags()}}
-\item \href{#method-Zotero-collection_items}{\code{Zotero$collection_items()}}
-\item \href{#method-Zotero-collection_items_tags}{\code{Zotero$collection_items_tags()}}
-\item \href{#method-Zotero-collection_items_top}{\code{Zotero$collection_items_top()}}
-\item \href{#method-Zotero-collection_items_top_tags}{\code{Zotero$collection_items_top_tags()}}
-\item \href{#method-Zotero-items}{\code{Zotero$items()}}
-\item \href{#method-Zotero-items_tags}{\code{Zotero$items_tags()}}
-\item \href{#method-Zotero-items_top}{\code{Zotero$items_top()}}
-\item \href{#method-Zotero-items_top_tags}{\code{Zotero$items_top_tags()}}
-\item \href{#method-Zotero-items_trash}{\code{Zotero$items_trash()}}
-\item \href{#method-Zotero-items_trash_tags}{\code{Zotero$items_trash_tags()}}
-\item \href{#method-Zotero-item}{\code{Zotero$item()}}
-\item \href{#method-Zotero-item_tags}{\code{Zotero$item_tags()}}
-\item \href{#method-Zotero-item_children}{\code{Zotero$item_children()}}
-\item \href{#method-Zotero-publication_items}{\code{Zotero$publication_items()}}
-\item \href{#method-Zotero-publication_items_tags}{\code{Zotero$publication_items_tags()}}
-\item \href{#method-Zotero-saved_searches}{\code{Zotero$saved_searches()}}
-\item \href{#method-Zotero-saved_search}{\code{Zotero$saved_search()}}
-\item \href{#method-Zotero-tags}{\code{Zotero$tags()}}
-\item \href{#method-Zotero-item_types}{\code{Zotero$item_types()}}
-\item \href{#method-Zotero-item_fields}{\code{Zotero$item_fields()}}
-\item \href{#method-Zotero-creator_types}{\code{Zotero$creator_types()}}
-\item \href{#method-Zotero-creator_fields}{\code{Zotero$creator_fields()}}
-\item \href{#method-Zotero-item_template}{\code{Zotero$item_template()}}
-\item \href{#method-Zotero-perform}{\code{Zotero$perform()}}
-\item \href{#method-Zotero-clone}{\code{Zotero$clone()}}
-}
+  \itemize{
+    \item \href{#method-Zotero-initialize}{\code{Zotero$new()}}
+    \item \href{#method-Zotero-key_set}{\code{Zotero$key_set()}}
+    \item \href{#method-Zotero-key_oauth}{\code{Zotero$key_oauth()}}
+    \item \href{#method-Zotero-key_read}{\code{Zotero$key_read()}}
+    \item \href{#method-Zotero-key_cache}{\code{Zotero$key_cache()}}
+    \item \href{#method-Zotero-key_complete_info}{\code{Zotero$key_complete_info()}}
+    \item \href{#method-Zotero-key_userid}{\code{Zotero$key_userid()}}
+    \item \href{#method-Zotero-key_username}{\code{Zotero$key_username()}}
+    \item \href{#method-Zotero-key_access}{\code{Zotero$key_access()}}
+    \item \href{#method-Zotero-key_groups}{\code{Zotero$key_groups()}}
+    \item \href{#method-Zotero-key_revoke}{\code{Zotero$key_revoke()}}
+    \item \href{#method-Zotero-library}{\code{Zotero$library()}}
+    \item \href{#method-Zotero-params}{\code{Zotero$params()}}
+    \item \href{#method-Zotero-collections}{\code{Zotero$collections()}}
+    \item \href{#method-Zotero-collections_top}{\code{Zotero$collections_top()}}
+    \item \href{#method-Zotero-collection}{\code{Zotero$collection()}}
+    \item \href{#method-Zotero-collection_subgroups}{\code{Zotero$collection_subgroups()}}
+    \item \href{#method-Zotero-collection_tags}{\code{Zotero$collection_tags()}}
+    \item \href{#method-Zotero-collection_items}{\code{Zotero$collection_items()}}
+    \item \href{#method-Zotero-collection_items_tags}{\code{Zotero$collection_items_tags()}}
+    \item \href{#method-Zotero-collection_items_top}{\code{Zotero$collection_items_top()}}
+    \item \href{#method-Zotero-collection_items_top_tags}{\code{Zotero$collection_items_top_tags()}}
+    \item \href{#method-Zotero-items}{\code{Zotero$items()}}
+    \item \href{#method-Zotero-items_tags}{\code{Zotero$items_tags()}}
+    \item \href{#method-Zotero-items_top}{\code{Zotero$items_top()}}
+    \item \href{#method-Zotero-items_top_tags}{\code{Zotero$items_top_tags()}}
+    \item \href{#method-Zotero-items_trash}{\code{Zotero$items_trash()}}
+    \item \href{#method-Zotero-items_trash_tags}{\code{Zotero$items_trash_tags()}}
+    \item \href{#method-Zotero-item}{\code{Zotero$item()}}
+    \item \href{#method-Zotero-item_tags}{\code{Zotero$item_tags()}}
+    \item \href{#method-Zotero-item_children}{\code{Zotero$item_children()}}
+    \item \href{#method-Zotero-publication_items}{\code{Zotero$publication_items()}}
+    \item \href{#method-Zotero-publication_items_tags}{\code{Zotero$publication_items_tags()}}
+    \item \href{#method-Zotero-saved_searches}{\code{Zotero$saved_searches()}}
+    \item \href{#method-Zotero-saved_search}{\code{Zotero$saved_search()}}
+    \item \href{#method-Zotero-tags}{\code{Zotero$tags()}}
+    \item \href{#method-Zotero-item_types}{\code{Zotero$item_types()}}
+    \item \href{#method-Zotero-item_fields}{\code{Zotero$item_fields()}}
+    \item \href{#method-Zotero-creator_types}{\code{Zotero$creator_types()}}
+    \item \href{#method-Zotero-creator_fields}{\code{Zotero$creator_fields()}}
+    \item \href{#method-Zotero-item_template}{\code{Zotero$item_template()}}
+    \item \href{#method-Zotero-perform}{\code{Zotero$perform()}}
+    \item \href{#method-Zotero-clone}{\code{Zotero$clone()}}
+  }
 }
 \if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-Zotero-new"></a>}}
-\if{latex}{\out{\hypertarget{method-Zotero-new}{}}}
-\subsection{Method \code{new()}}{
-Initialize a new Zotero instance
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$new()}\if{html}{\out{</div>}}
+\if{html}{\out{<a id="method-Zotero-initialize"></a>}}
+\if{latex}{\out{\hypertarget{method-Zotero-initialize}{}}}
+\subsection{\code{Zotero$new()}}{
+  Initialize a new Zotero instance
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$new()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_set"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_set}{}}}
-\subsection{Method \code{key_set()}}{
-Set Zotero API key directly
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_set(key)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{key}}{A character string representing the Zotero API key. You
+\subsection{\code{Zotero$key_set()}}{
+  Set Zotero API key directly
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_set(key)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{key}}{A character string representing the Zotero API key. You
 can create your private API key by visiting
 \url{https://www.zotero.org/settings/keys}. If the \code{key} argument is
 not provided, the function will attempt to use the value from the
 environment variable \code{ZOTERO_API}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_oauth"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_oauth}{}}}
-\subsection{Method \code{key_oauth()}}{
-OAuth authorization for the Zotero API
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_oauth()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$key_oauth()}}{
+  OAuth authorization for the Zotero API
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_oauth()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    This method must be used in an interactive session
+  }
 }
 
-\subsection{Details}{
-This method must be used in an interactive session
-}
-
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_read"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_read}{}}}
-\subsection{Method \code{key_read()}}{
-Read the cached Zotero API key
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_read(userid = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{userid}}{A string of user ID. If provided, the function will
+\subsection{\code{Zotero$key_read()}}{
+  Read the cached Zotero API key
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_read(userid = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{userid}}{A string of user ID. If provided, the function will
 attempt to find the cached key for this user. If not provided, the
 function will attempt to use the last cached key. For your user ID,
 visit \url{https://www.zotero.org/settings/keys}.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_cache"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_cache}{}}}
-\subsection{Method \code{key_cache()}}{
-Cache the Zotero API key
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_cache()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$key_cache()}}{
+  Cache the Zotero API key
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_cache()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_complete_info"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_complete_info}{}}}
-\subsection{Method \code{key_complete_info()}}{
-Fill in missing information associated with the Zotero
+\subsection{\code{Zotero$key_complete_info()}}{
+  Fill in missing information associated with the Zotero
 API key
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_complete_info()}\if{html}{\out{</div>}}
-}
-
-\subsection{Details}{
-This method ensures that the Zotero API key is fully populated with
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_complete_info()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    This method ensures that the Zotero API key is fully populated with
 the required user information (e.g., userid, username, and access
 level). If any of the key details are missing, it retrieves and
 completes the necessary information.
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_userid"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_userid}{}}}
-\subsection{Method \code{key_userid()}}{
-Retrieve the Zotero user ID for the current API key
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_userid()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$key_userid()}}{
+  Retrieve the Zotero user ID for the current API key
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_userid()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_username"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_username}{}}}
-\subsection{Method \code{key_username()}}{
-Retrieve the Zotero user name for the current API key
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_username()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$key_username()}}{
+  Retrieve the Zotero user name for the current API key
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_username()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_access"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_access}{}}}
-\subsection{Method \code{key_access()}}{
-Retrieve the access level for the current API key
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_access()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$key_access()}}{
+  Retrieve the access level for the current API key
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_access()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_groups"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_groups}{}}}
-\subsection{Method \code{key_groups()}}{
-Retrieve the list of groups the current API key has
+\subsection{\code{Zotero$key_groups()}}{
+  Retrieve the list of groups the current API key has
 access to
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_groups()}\if{html}{\out{</div>}}
-}
-
-\subsection{Details}{
-This method retrieves the set of groups the current API key has
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_groups()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    This method retrieves the set of groups the current API key has
 access to, including public groups the key owner belongs to, even if
 the key doesn't have explicit permissions for those groups. It is
 useful for identifying which groups a user or API key can interact
 with, including public groups and groups that the owner has
 membership in.
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-key_revoke"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-key_revoke}{}}}
-\subsection{Method \code{key_revoke()}}{
-Revoke the current Zotero API key
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$key_revoke()}\if{html}{\out{</div>}}
-}
-
-\subsection{Details}{
-This method will also remove the cached file if the key is from the
+\subsection{\code{Zotero$key_revoke()}}{
+  Revoke the current Zotero API key
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$key_revoke()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    This method will also remove the cached file if the key is from the
 cached credential file.
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-library"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-library}{}}}
-\subsection{Method \code{library()}}{
-Determine or Set the Library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$library(library_id, library_type)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{library_id}}{A string representing either a \verb{user ID} or
+\subsection{\code{Zotero$library()}}{
+  Determine or Set the Library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$library(library_id, library_type)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{library_id}}{A string representing either a \verb{user ID} or
 \verb{group ID} for the library.}
-
-\item{\code{library_type}}{A string of \code{"user"} or \code{"group"} representing
+      \item{\code{library_type}}{A string of \code{"user"} or \code{"group"} representing
 the type for the library.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-This method allows you to specify the library from which to retrieve
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    This method allows you to specify the library from which to retrieve
 or manipulate data. The library ID is identified by a \verb{user ID} or
 \verb{group ID}. The library ID and its type (\code{user} or \code{group}) are
 essential for the request. By default, the \verb{user ID} associated with
@@ -270,553 +273,600 @@ uncommon for users to set a \code{user} type with a library ID that
 differs from the current API key's user ID.  If a \strong{library_id} is
 provided with a non-default \strong{library_type}, the \strong{library_type}
 (\code{"user"} or \code{"group"}) must be specified.
-}
-
-\subsection{Returns}{
-A \code{zotero_library} object when \strong{library_id} is missing,
+  }
+  \subsection{Returns}{
+    A \code{zotero_library} object when \strong{library_id} is missing,
 otherwise, returns the Zotero instance itself, allowing for method
 chaining.
+  }
 }
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-params"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-params}{}}}
-\subsection{Method \code{params()}}{
-Determine or Set the global parameters
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$params(...)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$params()}}{
+  Determine or Set the global parameters
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$params(...)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{Additional arguments passed on to \code{\link[=zotero_params]{zotero_params()}}.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Returns}{
+    A \code{zotero_params} object when \code{...} is empty, otherwise,
+returns the Zotero instance itself, allowing for method chaining.
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{...}}{Additional arguments passed on to \code{\link[=zotero_params]{zotero_params()}}.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A \code{zotero_params} object when \code{...} is empty, otherwise,
-returns the Zotero instance itself, allowing for method chaining.
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collections"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collections}{}}}
-\subsection{Method \code{collections()}}{
-Collections in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collections(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$collections()}}{
+  Collections in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collections(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collections_top"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collections_top}{}}}
-\subsection{Method \code{collections_top()}}{
-Top-level collections in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collections_top(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$collections_top()}}{
+  Top-level collections in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collections_top(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collection}{}}}
-\subsection{Method \code{collection()}}{
-A specific collection in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection(collection, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{collection}}{A specific collection in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+\subsection{\code{Zotero$collection()}}{
+  A specific collection in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collection(collection, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{collection}}{A specific collection in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection_subgroups"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collection_subgroups}{}}}
-\subsection{Method \code{collection_subgroups()}}{
-Subcollections within a specific collection in the
+\subsection{\code{Zotero$collection_subgroups()}}{
+  Subcollections within a specific collection in the
 library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_subgroups(collection, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{collection}}{A specific collection in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collection_subgroups(collection, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{collection}}{A specific collection in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collection_tags}{}}}
-\subsection{Method \code{collection_tags()}}{
-Tags associated with a specific collection in the
+\subsection{\code{Zotero$collection_tags()}}{
+  Tags associated with a specific collection in the
 library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_tags(collection, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{collection}}{A specific collection in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collection_tags(collection, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{collection}}{A specific collection in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection_items"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collection_items}{}}}
-\subsection{Method \code{collection_items()}}{
-Items within a specific collection in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items(collection, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{collection}}{A specific collection in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+\subsection{\code{Zotero$collection_items()}}{
+  Items within a specific collection in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collection_items(collection, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{collection}}{A specific collection in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection_items_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collection_items_tags}{}}}
-\subsection{Method \code{collection_items_tags()}}{
-Tags associated with the Items within a specific
+\subsection{\code{Zotero$collection_items_tags()}}{
+  Tags associated with the Items within a specific
 collection in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_tags(collection, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{collection}}{A specific collection in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collection_items_tags(collection, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{collection}}{A specific collection in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection_items_top"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collection_items_top}{}}}
-\subsection{Method \code{collection_items_top()}}{
-Top-level items within a specific collection in the
+\subsection{\code{Zotero$collection_items_top()}}{
+  Top-level items within a specific collection in the
 library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_top(collection, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{collection}}{A specific collection in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collection_items_top(collection, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{collection}}{A specific collection in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-collection_items_top_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-collection_items_top_tags}{}}}
-\subsection{Method \code{collection_items_top_tags()}}{
-Tags associated with the top-level items within a
+\subsection{\code{Zotero$collection_items_top_tags()}}{
+  Tags associated with the top-level items within a
 specific collection in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$collection_items_top_tags(collection, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{collection}}{A specific collection in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$collection_items_top_tags(collection, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{collection}}{A specific collection in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-items}{}}}
-\subsection{Method \code{items()}}{
-All items in the library, excluding trashed items
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$items()}}{
+  All items in the library, excluding trashed items
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$items(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-items_tags}{}}}
-\subsection{Method \code{items_tags()}}{
-Tags associated all items in the library, excluding
+\subsection{\code{Zotero$items_tags()}}{
+  Tags associated all items in the library, excluding
 trashed items
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_tags(params = NULL)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$items_tags(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_top"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-items_top}{}}}
-\subsection{Method \code{items_top()}}{
-Top-level items in the library, excluding trashed items
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_top(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$items_top()}}{
+  Top-level items in the library, excluding trashed items
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$items_top(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_top_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-items_top_tags}{}}}
-\subsection{Method \code{items_top_tags()}}{
-Tags associated with the top-level items in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_top_tags(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$items_top_tags()}}{
+  Tags associated with the top-level items in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$items_top_tags(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_trash"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-items_trash}{}}}
-\subsection{Method \code{items_trash()}}{
-Items in the trash
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_trash(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$items_trash()}}{
+  Items in the trash
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$items_trash(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-items_trash_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-items_trash_tags}{}}}
-\subsection{Method \code{items_trash_tags()}}{
-Tags associated with the items in the trash
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$items_trash_tags(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$items_trash_tags()}}{
+  Tags associated with the items in the trash
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$items_trash_tags(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-item"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-item}{}}}
-\subsection{Method \code{item()}}{
-A specific item in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item(item, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{item}}{A specific saved search in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+\subsection{\code{Zotero$item()}}{
+  A specific item in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$item(item, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{item}}{A specific saved search in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-item_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-item_tags}{}}}
-\subsection{Method \code{item_tags()}}{
-Tags associated with a specific item in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_tags(item, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{item}}{A specific saved search in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+\subsection{\code{Zotero$item_tags()}}{
+  Tags associated with a specific item in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$item_tags(item, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{item}}{A specific saved search in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-item_children"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-item_children}{}}}
-\subsection{Method \code{item_children()}}{
-Child items under a specific item
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_children(item, params = NULL)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{item}}{A specific saved search in the library.}
-
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+\subsection{\code{Zotero$item_children()}}{
+  Child items under a specific item
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$item_children(item, params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{item}}{A specific saved search in the library.}
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
 create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
-\if{html}{\out{</div>}}
-}
-}
+
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-publication_items"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-publication_items}{}}}
-\subsection{Method \code{publication_items()}}{
-Items in My Publications
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$publication_items(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$publication_items()}}{
+  Items in My Publications
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$publication_items(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-publication_items_tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-publication_items_tags}{}}}
-\subsection{Method \code{publication_items_tags()}}{
-Tags associated with the items in My Publications
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$publication_items_tags(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$publication_items_tags()}}{
+  Tags associated with the items in My Publications
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$publication_items_tags(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-saved_searches"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-saved_searches}{}}}
-\subsection{Method \code{saved_searches()}}{
-Get all saved searches in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$saved_searches()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$saved_searches()}}{
+  Get all saved searches in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$saved_searches()}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    Only get the saved searches, not search results.
+  }
 }
 
-\subsection{Details}{
-Only get the saved searches, not search results.
-}
-
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-saved_search"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-saved_search}{}}}
-\subsection{Method \code{saved_search()}}{
-Get a specific saved search in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$saved_search(search)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$saved_search()}}{
+  Get a specific saved search in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$saved_search(search)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{search}}{A specific saved search in the library.}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    Only get the saved searches, not search results.
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{search}}{A specific saved search in the library.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-Only get the saved searches, not search results.
-}
-
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-tags"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-tags}{}}}
-\subsection{Method \code{tags()}}{
-All tags in the library
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$tags(params = NULL)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$tags()}}{
+  All tags in the library
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$tags(params = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
+create the request.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{params}}{A \code{\link[=zotero_params]{zotero_params()}} object defined the parameters used to
-create the request.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-item_types"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-item_types}{}}}
-\subsection{Method \code{item_types()}}{
-Getting All Item Types
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_types()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$item_types()}}{
+  Getting All Item Types
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$item_types()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-item_fields"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-item_fields}{}}}
-\subsection{Method \code{item_fields()}}{
-Getting All Item Fields or All Valid Fields for an Item
+\subsection{\code{Zotero$item_fields()}}{
+  Getting All Item Fields or All Valid Fields for an Item
 Type
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_fields(item_type = NULL)}\if{html}{\out{</div>}}
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$item_fields(item_type = NULL)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{item_type}}{A specific item type in the library.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{item_type}}{A specific item type in the library.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-creator_types"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-creator_types}{}}}
-\subsection{Method \code{creator_types()}}{
-Getting Valid Creator Types for an Item Type
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$creator_types(item_type)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$creator_types()}}{
+  Getting Valid Creator Types for an Item Type
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$creator_types(item_type)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{item_type}}{A specific item type in the library.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{item_type}}{A specific item type in the library.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-creator_fields"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-creator_fields}{}}}
-\subsection{Method \code{creator_fields()}}{
-Getting Localized Creator Fields
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$creator_fields()}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$creator_fields()}}{
+  Getting Localized Creator Fields
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$creator_fields()}
+    \if{html}{\out{</div>}}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-item_template"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-item_template}{}}}
-\subsection{Method \code{item_template()}}{
-Getting a Template for an Item Type
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$item_template(item_type)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$item_template()}}{
+  Getting a Template for an Item Type
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$item_template(item_type)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{item_type}}{A specific item type in the library.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{item_type}}{A specific item type in the library.}
-}
-\if{html}{\out{</div>}}
-}
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-perform"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-perform}{}}}
-\subsection{Method \code{perform()}}{
-Perform the Zotero API Request
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$perform(
+\subsection{\code{Zotero$perform()}}{
+  Perform the Zotero API Request
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$perform(
   ...,
   library = NULL,
   query = NULL,
@@ -826,41 +876,33 @@ Perform the Zotero API Request
   is_error = NULL,
   path = NULL,
   verbosity = NULL
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{...}}{Character strings representing the path components to
+)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{...}}{Character strings representing the path components to
 append to the Zotero API base URL.}
-
-\item{\code{library}}{A \code{\link[=zotero_library]{zotero_library()}} object, usually
+      \item{\code{library}}{A \code{\link[=zotero_library]{zotero_library()}} object, usually
 \code{self$library()}. If provided, the request URL is prefixed with the
 relevant library path (\verb{/users/<userID>} or \verb{/groups/<groupID>}).}
-
-\item{\code{query}}{Optional named list of query parameters to be added to
+      \item{\code{query}}{Optional named list of query parameters to be added to
 the request URL. Note that the associated parameters will not be
 automatically added to the query string; you must manually specify
 the query if needed.}
-
-\item{\code{method}}{Custom HTTP method.}
-
-\item{\code{cache}}{A logical value indicates whether we should try to use
+      \item{\code{method}}{Custom HTTP method.}
+      \item{\code{cache}}{A logical value indicates whether we should try to use
 conditional request for caching.}
-
-\item{\code{body}}{A logical value indicates whether we should try to
+      \item{\code{body}}{A logical value indicates whether we should try to
 extract the \code{json}/\code{atom} body from the returned response.}
-
-\item{\code{is_error}}{A predicate function that takes a single argument
+      \item{\code{is_error}}{A predicate function that takes a single argument
 (the response) and returns \code{TRUE} or \code{FALSE} indicating whether or
 not an R error should be signalled.}
-
-\item{\code{path}}{Optionally, path to save body of the response. This is
+      \item{\code{path}}{Optionally, path to save body of the response. This is
 useful for large responses since it avoids storing the response in
 memory.}
-
-\item{\code{verbosity}}{How much information to print? This is a wrapper
+      \item{\code{verbosity}}{How much information to print? This is a wrapper
 around \link[httr2:req_verbose]{req_verbose()} that uses an integer to
 control verbosity:
 \itemize{
@@ -868,37 +910,49 @@ control verbosity:
 \item \code{1}: show headers
 \item \code{2}: show headers and bodies
 \item \code{3}: show headers, bodies, and curl status messages.
-}
-
-Use \link[httr2:with_verbosity]{with_verbosity()} to control the
-verbosity of requests that you can't affect directly.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Details}{
-This method constructs a request of the Zotero API and perform it. It
+}}
+    }
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Details}{
+    This method constructs a request of the Zotero API and perform it. It
 allows you to specify the URL path components and optional query
 parameters, and includes support for prefixing library-specific paths
 (e.g., \verb{/users/<userID>} or \verb{/groups/<groupID>}) when interacting
 with data from specific libraries.
+  }
+  \subsection{Returns}{
+    \itemize{
+\item If the HTTP request succeeds, and the status code is ok (e.g.
+200), an HTTP \link[httr2:response]{response} or the \code{json}/\code{atom}
+body if \code{body = TRUE}.
+\item If the HTTP request succeeds, but the status code is an error
+(e.g a 404), an error with class \code{c("httr2_http_404", "httr2_http")}. By default, all 400 and 500 status codes will be
+treated as an error, but you can customise this with \code{is_error}
+argument.
+\item If the HTTP request fails (e.g. the connection is dropped or the
+server doesn't exist), an error with class \code{"httr2_failure"}.
+}
+  }
 }
 
-}
 \if{html}{\out{<hr>}}
 \if{html}{\out{<a id="method-Zotero-clone"></a>}}
 \if{latex}{\out{\hypertarget{method-Zotero-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Zotero$clone(deep = FALSE)}\if{html}{\out{</div>}}
+\subsection{\code{Zotero$clone()}}{
+  The objects of this class are cloneable with this method.
+  \subsection{Usage}{
+    \if{html}{\out{<div class="r">}}
+    \preformatted{Zotero$clone(deep = FALSE)}
+    \if{html}{\out{</div>}}
+  }
+  \subsection{Arguments}{
+    \if{html}{\out{<div class="arguments">}}
+    \describe{
+      \item{\code{deep}}{Whether to make a deep clone.}
+    }
+    \if{html}{\out{</div>}}
+  }
 }
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

@@ -19,5 +19,10 @@ Useful links:
 \author{
 \strong{Maintainer}: Yun Peng \email{pengyun.me@outlook.com} (\href{https://orcid.org/0000-0003-2801-3332}{ORCID})
 
+Authors:
+\itemize{
+  \item Yun Peng \email{pengyun.me@outlook.com} (\href{https://orcid.org/0000-0003-2801-3332}{ORCID})
+}
+
 }
 \keyword{internal}

@@ -665,9 +665,6 @@ Zotero <- R6::R6Class(
         #'   * `1`: show headers
         #'   * `2`: show headers and bodies
         #'   * `3`: show headers, bodies, and curl status messages.
-        #'
-        #'   Use [with_verbosity()][httr2::with_verbosity] to control the
-        #'   verbosity of requests that you can't affect directly.
         #' @returns
         #'   * If the HTTP request succeeds, and the status code is ok (e.g.
         #'     200), an HTTP [response][httr2::response] or the `json`/`atom`
